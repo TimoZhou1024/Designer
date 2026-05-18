@@ -1,0 +1,36 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "ikuncode/gpt-5.3-codex",
+  "small_model": "ikuncode/gpt-5.3-codex",
+  "permission": {
+    "edit": "allow",
+    "bash": "ask",
+    "webfetch": "allow",
+    "skill": {
+      "brand-identity": "allow",
+      "logo-design": "allow",
+      "poster-composition": "allow",
+      "creative-copywriting": "allow",
+      "design-critique": "allow",
+      "*": "ask"
+    }
+  },
+  "agent": {
+    "design-orchestrator": {
+      "mode": "primary",
+      "description": "面向平面设计的总调度智能体：接收自然语言设计需求，依次调度 planner → designer → critic 完成端到端品牌设计。"
+    },
+    "planner": {
+      "mode": "subagent",
+      "description": "需求理解 + 任务拆解智能体。把用户设计需求拆成 5-7 个有依赖关系的子任务并以 JSON 输出。"
+    },
+    "designer": {
+      "mode": "subagent",
+      "description": "设计执行智能体。按 planner 的 WBS 完成 DESIGN.md / 文案 / Logo / 海报生成，调用 text_to_image 工具落盘到 artifacts/。"
+    },
+    "critic": {
+      "mode": "subagent",
+      "description": "设计评审智能体。按 5 维 rubric 评估 artifact 质量并给出改进建议。"
+    }
+  }
+}

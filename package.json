@@ -1,0 +1,18 @@
+{
+  "name": "designer-multi-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 Open Code 的多智能体平面设计系统 (轻量版 Open Design)",
+  "type": "module",
+  "scripts": {
+    "design": "opencode run --agent design-orchestrator",
+    "tui": "opencode"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "latest",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}

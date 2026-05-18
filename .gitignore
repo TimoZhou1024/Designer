@@ -1,0 +1,26 @@
+# Secrets
+.env
+.env.local
+
+# Node / Bun
+node_modules/
+bun.lockb
+package-lock.json
+
+# Runtime output (但保留作为课题交付样例的 demo artifact)
+artifacts/*
+!artifacts/README.md
+!artifacts/chuangzhi-college-20260514/
+.opencode/cache/
+.opencode/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# 保留参考资料
+reference/
