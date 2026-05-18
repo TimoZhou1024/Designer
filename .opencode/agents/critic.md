@@ -37,13 +37,20 @@ orchestrator 会传给你：
 
 按以下顺序读 `artifacts/<slug>/` 下所有文件：
 
-1. `DESIGN.md`
-2. `brand-spec.json`
-3. `copywriting.md`
-4. `logo/v*.png`（图像无法直接"读"，但读取 logo/README.md 里记录的 prompt 与策略）
-5. `poster/main.png`（同上，看 poster/README.md 或 prompt 元数据）
+1. `research-brief.md`（researcher 输出，理解品牌背景与设计依据）
+2. `DESIGN.md`
+3. `brand-spec.json`
+4. `copywriting.md`
+5. **每个类别目录**（logo / merch / furniture / ui / brochure / poster …）
+   - 读 `<category>/README.md` 了解该类别的变体策略与每张 prompt
+   - 看每张 PNG 文件大小（> 50KB 才是真图，68 字节是 dryrun 占位）
+6. **重要变化**：本系统已升级为多类别多变体 + 图直接含中文文字策略，评审时关注：
+   - 类别覆盖度（planner WBS 是否合理覆盖品牌主体类型的核心需求）
+   - 变体多样性（同类别不同变体是否真的"显著差异"）
+   - 中文文字渲染质量（是否有错字、缺笔、多笔、错字体）
+   - 跨类别风格一致性（多类别产物是否视觉同源）
 
-如果有产物缺失，记录到"Detail 维度"作为扣分依据。
+如果有产物缺失或大小异常（68 字节），重点记录到"Detail 维度"作为扣分依据。
 
 ### Step 3 ─ 按 5 维打分
 
@@ -77,11 +84,11 @@ orchestrator 会传给你：
 
 | 维度 | 必须检查的具体项 |
 |---|---|
-| Philosophy | DESIGN.md 是否选定了 brand-identity skill 的 5 个方向之一？anti-patterns 是否有 ≥ 5 条？Positioning 是否包含 brand promise？ |
-| Hierarchy  | 3 版 Logo 是否视觉显著差异？Logo prompt 是否禁用了 embedded text？poster 是否有明确单一焦点？ |
-| Detail     | 产物清单是否齐全（DESIGN.md / brand-spec.json / copywriting.md / 3 个 Logo / 1 个 poster / 这份 critique）？文件命名是否规范？prompt 是否含 negative 部分？ |
-| Function   | DESIGN.md Positioning 是否呼应了用户原始需求？文案 slogan 是否能让人识别出品类？海报视觉隐喻是否与品牌定位一致？ |
-| Innovation | 在同类品牌（学院/古镇/SaaS）的视觉惯例上是否做出有自觉的偏移？还是套了模板？ |
+| Philosophy | research-brief.md 是否被 DESIGN.md 充分采纳（特别是 brief §6 推荐方向）？DESIGN.md 是否选定了 brand-identity skill 的 5 个方向之一？anti-patterns 是否有 ≥ 5 条？Positioning 是否包含 brand promise？多类别选择是否符合品牌主体类型（看 brief §1）？ |
+| Hierarchy  | **类别覆盖度**（planner 是否选了 ≥ 4 类，是否覆盖品牌主体的核心需求）？同类别多张变体是否**视觉显著差异**（变体之间不是同一图的微调）？跨类别风格是否一致（视觉同源）？海报/Logo 是否有明确单一焦点？ |
+| Detail     | 产物清单是否齐全（每个 WBS 任务都有对应文件）？**文件大小是否正常（> 50KB 才是真图，68 字节是 dryrun 异常）**？文件命名是否规范？prompt 是否含 negative 部分？**中文文字渲染质量**：图中的中文是否有错字 / 缺笔 / 多笔 / 错字体（如该用宋体却出现黑体）？ |
+| Function   | DESIGN.md Positioning 是否呼应了用户原始需求？文案 slogan 是否能让人识别出品类？多类别产物是否每一类都能溯源到 brief 中的某个具体诉求（不是为做而做）？ |
+| Innovation | 在同类品牌（看 brief §4）的视觉惯例上是否做出有自觉的偏移？还是套了模板？variant 选择是否有创意（如雪糕这种特殊文创形态 vs 仅仅明信片+T恤的常规选择）？ |
 
 ## 反模式（评审自身的）
 

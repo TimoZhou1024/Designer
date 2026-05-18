@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "ikuncode/gpt-5.3-codex",
-  "small_model": "ikuncode/gpt-5.3-codex",
+  "model": "ikuncode/claude-opus-4-7",
+  "small_model": "ikuncode/claude-opus-4-7",
   "permission": {
     "edit": "allow",
     "bash": "ask",
@@ -12,25 +12,34 @@
       "poster-composition": "allow",
       "creative-copywriting": "allow",
       "design-critique": "allow",
+      "text-rendering": "allow",
+      "product-mockup": "allow",
+      "public-furniture": "allow",
+      "ui-mockup": "allow",
+      "brochure-design": "allow",
       "*": "ask"
     }
   },
   "agent": {
     "design-orchestrator": {
       "mode": "primary",
-      "description": "面向平面设计的总调度智能体：接收自然语言设计需求，依次调度 planner → designer → critic 完成端到端品牌设计。"
+      "description": "面向平面设计的总调度智能体：接收自然语言设计需求，依次调度 researcher → planner → designer → critic 完成端到端品牌设计。"
+    },
+    "researcher": {
+      "mode": "subagent",
+      "description": "品牌深度调研智能体。多源 webfetch 调研品牌主体背景、文化联想、同类视觉语言，输出 research-brief。"
     },
     "planner": {
       "mode": "subagent",
-      "description": "需求理解 + 任务拆解智能体。把用户设计需求拆成 5-7 个有依赖关系的子任务并以 JSON 输出。"
+      "description": "需求理解 + 任务拆解智能体。基于 research-brief 智能决定 ≥4 类设计 + 每类 N 张变体策略，以 JSON 输出 WBS。"
     },
     "designer": {
       "mode": "subagent",
-      "description": "设计执行智能体。按 planner 的 WBS 完成 DESIGN.md / 文案 / Logo / 海报生成，调用 text_to_image 工具落盘到 artifacts/。"
+      "description": "设计执行智能体。按 planner 的 WBS 完成 DESIGN.md / 文案 / 多类别多变体视觉资产生成，调用 text_to_image 工具落盘到 artifacts/。"
     },
     "critic": {
       "mode": "subagent",
-      "description": "设计评审智能体。按 5 维 rubric 评估 artifact 质量并给出改进建议。"
+      "description": "设计评审智能体。按 5 维 rubric 评估 artifact 质量，含中文文字渲染质量、品牌一致性、变体多样性等维度。"
     }
   }
 }

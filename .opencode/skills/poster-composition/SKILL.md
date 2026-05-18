@@ -1,13 +1,13 @@
 ---
 name: poster-composition
-description: 主视觉海报构图原则与 prompt 模板。教 designer agent 如何为品牌生成 1 张主视觉海报，复用 DESIGN.md 的色彩/字体/调性，避免视觉与 Logo 脱节。当 WBS 含 poster/banner/主视觉/宣传图任务时加载。
+description: 主视觉海报构图原则与 prompt 模板。教 designer agent 为品牌生成多张主视觉海报，复用 brand-spec 色彩/字体，海报中**直接渲染中文标题与副标题**（依赖 text-rendering skill）。当 WBS 含 poster / banner / 主视觉 / 宣传图任务时加载。
 ---
 
 # Poster Composition Skill —— 海报构图与提示词
 
 ## 何时加载
 
-WBS 中出现"海报 / 主视觉 / banner / 宣传图"任务时加载。
+WBS 中出现 `category: "poster"` / 主视觉 / banner / 宣传图任务时加载。**先 `skill("text-rendering")` 再 `skill("poster-composition")`**。
 
 ## 构图原则（5 条）
 
@@ -17,65 +17,68 @@ WBS 中出现"海报 / 主视觉 / banner / 宣传图"任务时加载。
 4. **留白节奏** — 上下左右各留 8-15% 安全边距
 5. **品牌一致** — 复用 brand-spec.json 的主色/字体，与 Logo 视觉同源
 
-## Prompt 模板
+## Prompt 模板（已含 text-rendering）
 
 ```
 [STYLE_DIRECTIVE]
 Brand poster for [BRAND_NAME_EN] ([BRAND_NAME_CN]).
+Render the Chinese headline "[HEADLINE_TEXT]" in [TITLE_FONT_EN] Bold, large (about 25-30% of canvas height), positioned at [TITLE_POSITION].
+Render the Chinese subtitle "[SUBTITLE_TEXT]" in [BODY_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION].
 Theme: [POSTER_THEME].
 Composition: [COMPOSITION_PATTERN].
 Color palette: primary [PRIMARY_HEX] dominant ~60%, accent [ACCENT_HEX] ~25%, neutral [PAPER_HEX] balance.
 Mood: [MOOD_KEYWORDS].
-Visual elements: [VISUAL_METAPHORS] (no text overlays).
+Visual elements: [VISUAL_METAPHORS].
 Style: editorial poster, magazine cover quality, flat or semi-flat illustration, vector-friendly.
 Output aspect: 9:16 portrait, ready for both print and social media.
-[NEGATIVE_PROMPT]
+Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no realistic human faces, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
 ```
 
 **字段填充规则**：
-- `POSTER_THEME` 1-2 句话总结海报主题，从用户需求 + brand promise 推导
+- `HEADLINE_TEXT` 必填——通常来自 copywriting.md 的 slogan 主推或 brand promise（4-12 字）
+- `SUBTITLE_TEXT` 可选——副标题或英文翻译（≤ 15 字）
+- `TITLE_POSITION` 三选一：`upper third` / `centered above the focal element` / `bottom third over visual cluster`
 - `COMPOSITION_PATTERN` 选一种：
   - `central focal hero + radial supporting elements`（焦点居中辐射）
   - `rule-of-thirds with focal element at upper-right intersection, supporting cluster bottom-left`（三分法对角）
   - `vertical layered composition: hero band top, content middle, identity strip bottom`（横向分层）
-- `MOOD_KEYWORDS` 3-5 个词，来自 DESIGN.md voice，避免空话
-- `VISUAL_METAPHORS` 1-3 个具体可视化的隐喻物（**禁止**抽象词如"未来"/"希望"）
-- `NEGATIVE_PROMPT` 固定：`Negative: no realistic human faces, no embedded text, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.`
+- `MOOD_KEYWORDS` 3-5 个词，来自 brand-spec.voice
+- `VISUAL_METAPHORS` 1-3 个具体可视化的隐喻物（**禁止**抽象词如"未来 / 希望"）
 
 ## 调用顺序
 
 ```
-读取 artifacts/<slug>/brand-spec.json + DESIGN.md
+读取 artifacts/<slug>/brand-spec.json + DESIGN.md + copywriting.md
 ↓
-text_to_image({
-  prompt: <填充后>,
-  output_name: "poster/main.png",
-  artifact_slug: <slug>,
-  aspect: "9:16",
-  n: 1
-})
+对每个海报变体任务：
+  1. 从 task.embed_text 取标题文字
+  2. 用上方模板填充 prompt
+  3. text_to_image({ prompt, output_name, artifact_slug, aspect: "9:16", n: 1 })
 ↓
-保存 poster/README.md 记录 prompt + 排版建议（标题文字位置、Logo 位置）
+保存 poster/README.md 记录每张 prompt + 真实 model/endpoint + 备注
 ```
 
 ## 反模式
 
-- ❌ **要求海报里出现具体文字** — 文字交给 Figma 后期排版，prompt 中加入"no embedded text"
-- ❌ **试图一张海报装下所有信息** — 海报只承担"情绪 + 视觉锤"，详情留给宣传册
-- ❌ **强行 photorealistic** — 写实风需要极高 prompt 工程功底，对品牌物料反而显廉价；用 flat / illustrative 更稳
-- ❌ **复用 Logo 的 prompt** — Logo 是符号语言，海报是场景语言，应分开重新组织
+- ❌ **保留旧策略 "no embedded text"**：本 skill 已升级，海报必须含中文标题
+- ❌ **试图一张海报装下所有信息**：海报承担"情绪 + 视觉锤 + 短标题"，详情留给宣传册
+- ❌ **强行 photorealistic**：除非品牌方向明确要写实摄影，否则用 flat / illustrative 更稳
+- ❌ **传 provider 参数给 text_to_image**：违反 designer.md 第 6 条
+- ❌ **变体之间只是色彩微调**：变体应在"构图模式 + 隐喻物"维度变化
 
-## 输出样例 prompt（创智学院主视觉）
+## 实例（朱家角 - 主视觉海报）
 
 ```
 Minimal, modern, brand-identity quality poster.
-Brand poster for ChuangZhi Academy (创智学院).
-Theme: a new generation of builders learning by shipping real projects.
-Composition: rule-of-thirds with focal element at upper-right intersection, supporting cluster bottom-left.
-Color palette: primary #2B3FAB dominant ~60%, accent #F2B544 ~25%, neutral #FBFAF6 balance.
-Mood: ambitious, grounded, collaborative, optimistic.
-Visual elements: a stylized triangle constellation of connected nodes ascending, with subtle blueprint grid background and one rising sunburst at the focal point (no text overlays).
-Style: editorial poster, magazine cover quality, flat or semi-flat illustration, vector-friendly.
+Brand poster for ZhuJiaJiao Ancient Town (朱家角).
+Render the Chinese headline "梦回水乡" in Source Han Serif Bold, very large (about 28% of canvas height), positioned in the upper third of the canvas.
+Render the Chinese subtitle "千年江南 · 一桥一梦" in Source Han Serif Regular, medium, positioned just below the headline.
+Theme: a poetic morning view of the ancient stone bridge and waterways awakening at dawn.
+Composition: vertical layered composition — hero band top with text and misty sky, content middle with the iconic Fang Sheng Bridge over rippled water, identity strip bottom with subtle vermillion seal logo.
+Color palette: primary #1A1A1A ink black dominant ~55% (sky and silhouettes), accent #C73E2E vermillion ~10% (only the seal stamp), neutral paper #FBFAF6 ~35% (water and mist).
+Mood: tranquil, poetic, nostalgic, refined.
+Visual elements: a curved stone arch bridge in mid-distance, soft morning mist rising from the canal water, a single moored wooden boat under the bridge, ink-wash style distant rooftops with upturned eaves.
+Style: editorial poster, magazine cover quality, ink-wash painting blended with flat vector elements, vector-friendly.
 Output aspect: 9:16 portrait, ready for both print and social media.
-Negative: no realistic human faces, no embedded text, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
+Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no realistic human faces, no embedded extra text, no watermarks, no copyrighted characters, no clutter, no neon.
 ```
