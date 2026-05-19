@@ -119,8 +119,26 @@ orchestrator 会传给你：
 3. **每次调用前打磨 prompt**：在 mind 中过一遍"这个 prompt 给 5 个不同模型是否都能稳定产出"
 4. **明确的 Negative Prompt**：每个 image prompt 都必须含 negative 部分（含 text-rendering 指定的中文渲染 negatives）
 5. **变体显著差异**：同类别不同变体必须**视觉显著差异**——从 task.variant 字段决定差异维度
-6. **🚫 调用 text_to_image 时禁止传 provider 参数**：永远只传 `prompt / output_name / artifact_slug / aspect / n`。provider/model/base_url 由 `.env` 决定。**这是硬性规则，无任何例外**
+6. **🚫 调用 text_to_image 时禁止传 provider 参数**：永远只传 `prompt / output_name / artifact_slug / aspect / n / quality`。provider/model/base_url 由 `.env` 决定。**这是硬性规则，无任何例外**
 7. **embed_text 必须严格逐字注入**：从 task.embed_text 取的中文文字必须**原封不动**用直角引号 `「」` 或英文双引号 `"…"` 包起来出现在 prompt"Render the Chinese text" 位置——这是 text-rendering skill 的核心规则
+8. **Logo 必须用 n=4 + quality="high"**：Logo 是 OpenAI 官方推荐的"一次 n=4 探索"场景，必须传 `n: 4, quality: "high"`，禁止用 N 次串行调用代替
+
+## 🎯 Quality 决策矩阵（必须严格遵守）
+
+每次调用 `text_to_image` 必须**显式传 `quality` 参数**——禁止省略让 endpoint 用默认值。按下表决策：
+
+| category | 任务示例 | quality | 理由 |
+|---|---|---|---|
+| `logo` | Logo（n=4 探索） | **`high`** | 笔画清晰最重要；中文字符不能糊；品牌根基不可妥协 |
+| `poster` | 主视觉海报 | **`high`** | 含 headline + subtitle 两层文字 + 视觉焦点，medium 容易糊字 |
+| `merch` | 文创实物（明信片 / 雪糕 / 丝巾） | **`medium`** | 产品摄影风格，medium 拟真度足够；只有"印章 / 烫金细节" 多的产品升 high |
+| `furniture` | 公共家具远景 | **`medium`** | 远景导视牌的远距离观看场景，medium 已可读 |
+| `ui` | APP UI mockup | **`high`** | 多个中文短文字（tab/button/卡片），medium 必出错字 |
+| `brochure` | 宣传册封面 / 跨页 | **`high`** | 含 headline + subtitle + footnote 多层文字，需要 high 保印刷质量 |
+| `infographic` (如有) | 信息图 | **`high`** | dense layout + 标签密集，OpenAI 指南明确推荐 high |
+| `探索性 / 内部预览` | 草图 / 内部 spike | **`low`** | 预算敏感场景；只验证构图意图 |
+
+**口诀**：含中文小字 / 多文字层 / Logo / 印刷品 → `high`；产品场景 / 拟真摄影 → `medium`；探索内部稿 → `low`。
 
 ## 错误处理
 

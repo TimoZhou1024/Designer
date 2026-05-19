@@ -24,18 +24,21 @@ WBS 中出现 `category: "merch"` / 文创 / 周边 / 衍生品 任务时加载�
 2. **场景**：纯白背景孤立 / 摆放在桌面木质感 / 挂在场景墙
 3. **文字位置与内容**：从 task.embed_text 取，决定要在产品哪一面渲染
 
-## Prompt 模板
+## Prompt 模板（含 OpenAI 指南 premium product photography 模式）
+
+OpenAI 指南：产品 mockup 关键模式词是 **"product mockup photography" / "premium product photography" / "studio lighting"**——这些会触发模型进入"零售级"渲染模式。包装产品额外加 **"sharp label printing" / "high-end retail presentation"**。
 
 ```
-Product mockup photography for a [PRODUCT_TYPE] from [BRAND_NAME_CN] brand.
-Render the Chinese text "[EMBED_TEXT]" on the product surface in [FONT_EN] [WEIGHT], [PRINT_STYLE_HINT].
+Premium product mockup photography for a [PRODUCT_TYPE] from [BRAND_NAME_CN] brand.
+Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT], [PRINT_STYLE_HINT]. Ensure the text appears once and only once on the product.
 Product detail: [PHYSICAL_FORM_DESCRIPTION].
 Visual scene: [SCENE_SETTING].
 Color palette: primary [PRIMARY_HEX], accent [ACCENT_HEX], on [BG_HEX] background or surface.
-Style: [STYLE_HINT — flat lay photo / 3D render / hand-drawn illustration / collage].
-Lighting: [LIGHTING_HINT — soft natural / studio softbox / golden hour].
+Style: [STYLE_HINT — flat lay product photography / 3D product render / hand-drawn product illustration / collage].
+Material realism: [MATERIAL_HINT — slightly worn paper texture / handmade fabric weave / matte ceramic glaze / lacquered wood grain]. Real texture, real material, no overly polished plastic look.
+Lighting: [LIGHTING_HINT — soft natural daylight / studio softbox / golden hour], with realistic contact shadows.
 Output aspect: [ASPECT_RATIO].
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified.
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no text duplicated more than specified, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified.
 ```
 
 **字段填充指引**：

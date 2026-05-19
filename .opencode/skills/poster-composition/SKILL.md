@@ -17,21 +17,24 @@ WBS 中出现 `category: "poster"` / 主视觉 / banner / 宣传图任务时加�
 4. **留白节奏** — 上下左右各留 8-15% 安全边距
 5. **品牌一致** — 复用 brand-spec.json 的主色/字体，与 Logo 视觉同源
 
-## Prompt 模板（已含 text-rendering）
+## Prompt 模板（已含 text-rendering + OpenAI 指南拟真触发词）
+
+OpenAI 指南：海报场景应用 **photorealistic / editorial poster / magazine cover quality** 等关键词触发模型的"production-quality"模式。如果品牌方向偏写实摄影，加入 photography language（lens / lighting / framing）+ "real texture (fabric wear, imperfections)"。
 
 ```
-[STYLE_DIRECTIVE]
+Premium editorial poster, magazine cover quality, [STYLE_DIRECTIVE].
 Brand poster for [BRAND_NAME_EN] ([BRAND_NAME_CN]).
-Render the Chinese headline "[HEADLINE_TEXT]" in [TITLE_FONT_EN] Bold, large (about 25-30% of canvas height), positioned at [TITLE_POSITION].
-Render the Chinese subtitle "[SUBTITLE_TEXT]" in [BODY_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION].
+Render the Chinese headline "[HEADLINE_TEXT]" (verbatim, no extra characters) in [TITLE_FONT_EN] Bold, large (about 25-30% of canvas height), positioned at [TITLE_POSITION]. Ensure the headline appears once and only once.
+Render the Chinese subtitle "[SUBTITLE_TEXT]" in [BODY_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION]. Ensure the subtitle appears once and only once.
 Theme: [POSTER_THEME].
 Composition: [COMPOSITION_PATTERN].
 Color palette: primary [PRIMARY_HEX] dominant ~60%, accent [ACCENT_HEX] ~25%, neutral [PAPER_HEX] balance.
 Mood: [MOOD_KEYWORDS].
 Visual elements: [VISUAL_METAPHORS].
-Style: editorial poster, magazine cover quality, flat or semi-flat illustration, vector-friendly.
+Style: [STYLE_QUALIFIER — flat editorial illustration / photorealistic 35mm / ink-wash painting / vector-friendly].
+[OPTIONAL: For photorealistic mode add: shot like a 35mm film photograph, [LENS]mm lens, [LIGHTING], shallow depth of field, subtle film grain, real texture and natural color balance, no studio polish.]
 Output aspect: 9:16 portrait, ready for both print and social media.
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no realistic human faces, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
+Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no realistic human faces unless specified, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
 ```
 
 **字段填充规则**：

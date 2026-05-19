@@ -20,20 +20,22 @@ WBS 中出现 `category: "furniture"` / 公共家具 / 导视 / 街头家具 任
 | **古镇灯笼 (Lantern)** | 古镇街巷悬挂 | 小（单字 / 双字） |
 | **校园展示架 (Display Board)** | 校园公告区 | 大（标题 + 正文占位） |
 
-## Prompt 模板（场景式 prompt）
+## Prompt 模板（OpenAI 指南 architectural visualization 模式 + 场景式 prompt）
+
+OpenAI 指南：环境物件 / 公共家具最稳定的模式词是 **"architectural visualization" / "real-world setting" / "photographed in situ"**——这会触发模型用建筑可视化级别的材质、光影、比例来渲染物件。重点是**把物件嵌进真实空间**，不是孤立产品图。
 
 ```
-Architectural rendering of a [FURNITURE_TYPE] for [BRAND_NAME_CN] in its real-world setting.
-Render the Chinese text "[EMBED_TEXT]" on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT], [SIZE_HINT].
+Architectural visualization of a [FURNITURE_TYPE] for [BRAND_NAME_CN], photographed in its real-world setting as if it were already installed and in use.
+Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT], [SIZE_HINT]. Ensure the text appears once and only once.
 Furniture detail: [PHYSICAL_DESCRIPTION].
 Setting: [LOCATION_CONTEXT].
-Material palette: [PRIMARY_MATERIAL] for the structure, [ACCENT_MATERIAL] for the text and brand mark.
+Material palette: [PRIMARY_MATERIAL] for the structure, [ACCENT_MATERIAL] for the text and brand mark. Real material wear: [WEAR_HINT — slightly weathered patina / fresh installation gloss / aged copper green].
 Color palette: complementing the brand's primary [PRIMARY_HEX] subtly.
-Style: [STYLE_HINT — architectural visualization / product render / cinematic photo].
-Camera angle: [ANGLE_HINT — three-quarter view / low angle / direct front].
-Lighting: [LIGHTING_HINT].
-Output aspect: 4:3 or 16:9 for full scene.
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no realistic human faces, no other brand logos, no watermarks, no clutter.
+Style: architectural visualization with cinematic atmosphere, NOT product render isolation.
+Camera angle: [ANGLE_HINT — three-quarter view / low angle / direct front], at human eye level (~1.6m), as if a passerby took the photo.
+Lighting: [LIGHTING_HINT — soft afternoon sidelight / golden hour / overcast diffuse], with realistic ambient shadows on the ground.
+Output aspect: 4:3 or 16:9 for full scene context.
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no text duplicated more than specified, no realistic human faces, no other brand logos, no watermarks, no neon, no studio-isolated product look, no levitating objects.
 ```
 
 **字段填充指引**：

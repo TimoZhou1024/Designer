@@ -29,21 +29,26 @@ WBS 中出现 `category: "brochure"` / 宣传册 / 折页 / 出版物 任务时�
 
 这个策略平衡了"图含字"的演示效果与"长文易出错"的模型能力边界。
 
-## Prompt 模板
+## Prompt 模板（OpenAI 指南 "artifact spec" 框架）
+
+OpenAI 指南：印刷物 / 出版物的提示要写成 **"artifact spec"** —— 像规格书一样命名 deliverable、定义画布、声明层级、给精确文字。最强模式词：**"editorial print design / magazine-quality typography / professional print spread"**。
 
 ```
-A printed [BROCHURE_TYPE] design for [BRAND_NAME_CN] [BRAND_DESCRIPTION_BRIEF].
-Render the Chinese headline "[HEADLINE_TEXT]" in [TITLE_FONT_EN] Bold, very large, positioned [TITLE_POSITION].
-Render the Chinese subtitle "[SUBTITLE_TEXT]" in [TITLE_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION].
-[OPTIONAL: Render section heading "[SECTION_TEXT]" in [BODY_FONT_EN] Bold small, [SECTION_POSITION].]
-Body content: abstract horizontal text strokes suggesting paragraph body copy, no actual readable Chinese paragraph text (placeholder).
+Create one [BROCHURE_TYPE] page that feels like a real, published printed brochure for [BRAND_NAME_CN] [BRAND_DESCRIPTION_BRIEF].
+
+Render the Chinese headline "[HEADLINE_TEXT]" (verbatim, no extra characters) in [TITLE_FONT_EN] Bold, very large, positioned [TITLE_POSITION]. Ensure the headline appears once and only once.
+Render the Chinese subtitle "[SUBTITLE_TEXT]" in [TITLE_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION]. Ensure the subtitle appears once and only once.
+[OPTIONAL: Render small caption "[CAPTION_TEXT]" in [BODY_FONT_EN] Regular small at [CAPTION_POSITION].]
+
+Body content: abstract horizontal text strokes suggesting paragraph body copy in two short blocks, NOT actual readable Chinese paragraph text (placeholder strokes only — these will be filled in post-production).
+
 Layout: [LAYOUT_DESCRIPTION].
 Visual elements: [HERO_VISUAL_DESCRIPTION].
 Color palette: primary [PRIMARY_HEX] for headline and brand mark, [ACCENT_HEX] for highlights, neutral [BG_HEX] for paper.
-Material suggestion: [PAPER_HINT] (visible in the rendering as subtle texture).
-Style: editorial print design, magazine-quality typography, clean modern layout.
+Material suggestion: [PAPER_HINT] (visible in the rendering as subtle texture: weighted matte / textured handmade / glossy art / kraft natural).
+Style: editorial print design, magazine-quality typography, polished spacing, professional print spread aesthetic. Looks like it belongs in a real published brochure, not a template.
 Output aspect: [ASPECT_RATIO].
-Negative: no garbled characters in the headline/subtitle/section, no missing strokes, no Western letters mistaken for Chinese in the title areas, no logos other than the brand's, no watermarks, no Lorem Ipsum (the placeholder body copy should look like Chinese strokes, not Latin letters).
+Negative: no garbled characters in the headline/subtitle/caption, no missing strokes, no Western letters mistaken for Chinese in the title areas, no text duplicated more than specified, no logos other than the brand's, no watermarks, no Lorem Ipsum (the placeholder body copy should look like Chinese strokes, not Latin letters), no template-style stock layout.
 ```
 
 **字段填充指引**：

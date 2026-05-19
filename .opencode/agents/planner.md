@@ -58,11 +58,11 @@ orchestrator 会传给你：
 | **公益组织** | Logo / 议题海报 / 报告封面 / 募款活动物料 / 社交媒体头图 |
 
 **变体策略**（每类生成多张供客户选择）：
-- 标识类（Logo）：建议 3 张，跨风格家族
-- 海报 / 主视觉类：建议 2-3 张，跨构图
-- 实物 / 周边类：建议 2-3 张，跨产品形态（例如文创可以是 明信片+雪糕+丝巾）
-- UI 界面类：建议 2 张，跨核心页面（例如首页+详情页）
-- 印刷品类（宣传册）：建议 2 张，跨封面方案
+- **Logo（特殊）**：planner 只在 WBS 里放 **1 个 logo task**，designer 通过 `text_to_image({ n: 4 })` 单次出 4 版差异化。这是 OpenAI 官方推荐做法（token 节省 60% / 时间节省 50%）
+- 海报 / 主视觉类：建议 2-3 张，跨构图，planner 拆独立 task
+- 实物 / 周边类：建议 2-3 张，跨产品形态（明信片+雪糕+丝巾），planner 拆独立 task
+- UI 界面类：建议 2 张，跨核心页面（首页+详情页），planner 拆独立 task
+- 印刷品类（宣传册）：建议 2 张，跨封面方案，planner 拆独立 task
 
 **风格家族决策**：让 brief §6 的 1-3 个候选方向中选 1 个作为统一基调，所有类别在此基调下生成。变体多样性体现在"构图 / 产品形态 / 页面"维度，而非"风格家族"维度——以保证全套品牌包视觉同源。
 
@@ -106,9 +106,7 @@ WBS（节选）：
 [
   { "id": "brand-spec", "name": "DESIGN.md 与 brand-spec.json", "category": "brand-spec", "deliverable": "artifacts/<slug>/DESIGN.md, brand-spec.json", "depends_on": [], "skill": "brand-identity", "variant": null, "embed_text": null, "notes": "方向：东方雅韵；主色墨黑#1A1A1A + 朱砂#C73E2E；字体思源宋体" },
   { "id": "copywriting", "name": "创意文案合集", "category": "copywriting", "deliverable": "artifacts/<slug>/copywriting.md", "depends_on": ["brand-spec"], "skill": "creative-copywriting", "variant": null, "embed_text": null, "notes": "文化符号：江南水乡/桥/河/米食；调性：温润含蓄" },
-  { "id": "logo-v1", "name": "Logo 极简字标版", "category": "logo", "deliverable": "artifacts/<slug>/logo/v1-wordmark.png", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": "极简字标 - 仅「朱家角」三字 + 微调字符处理", "embed_text": "朱家角", "notes": "字体思源宋体 Bold；墨黑色；留白 30%" },
-  { "id": "logo-v2", "name": "Logo 印章徽章版", "category": "logo", "deliverable": "artifacts/<slug>/logo/v2-seal.png", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": "古印章风 - 朱砂红方印 + 篆体「朱」字", "embed_text": "朱", "notes": "明清古印章美学；红底白字反白" },
-  { "id": "logo-v3", "name": "Logo 江南水乡图形版", "category": "logo", "deliverable": "artifacts/<slug>/logo/v3-mark.png", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": "图形抽象 - 双桥+流水线条意象 + 小字「朱家角」附属", "embed_text": "朱家角", "notes": "线条简练；可独立使用作 favicon" },
+  { "id": "logo", "name": "Logo 设计探索 (一次 4 版)", "category": "logo", "deliverable": "artifacts/<slug>/logo/logo.png (n=4 → logo-1~4.png)", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": "4 个差异化方向（由模型在字标/印章/抽象/手写中自由挑选）", "embed_text": "朱家角", "notes": "designer 调用 text_to_image 时必须传 n=4 + quality='high'，单次出 4 版" },
   { "id": "merch-postcard", "name": "文创周边-明信片", "category": "merch", "deliverable": "artifacts/<slug>/merch/postcard-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "明信片 - 双桥实景 + 标题「梦回水乡」", "embed_text": "梦回水乡 朱家角", "notes": "横版构图；前景双桥后景民居" },
   { "id": "merch-icecream", "name": "文创周边-雪糕包装", "category": "merch", "deliverable": "artifacts/<slug>/merch/icecream-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "雪糕外包装 - 顶视图三支并排", "embed_text": "朱家角 江南雪糕", "notes": "包装纸朱砂色; 字烫金" },
   { "id": "merch-silk", "name": "文创周边-丝巾", "category": "merch", "deliverable": "artifacts/<slug>/merch/silk-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "丝巾平铺图 - 水墨桥梁纹样", "embed_text": "朱家角", "notes": "墨色水墨纹样 + 朱砂签印" },
@@ -120,7 +118,7 @@ WBS（节选）：
 ]
 ```
 
-共 13 项，6 类。这是文旅古镇的典型 WBS 形态，**不是模板**——其他品牌类型的 WBS 应当截然不同。
+共 11 项，6 类（Logo 单 task 但 n=4 出 4 版，因此实际产出仍是 13 张图）。这是文旅古镇的典型 WBS 形态，**不是模板**——其他品牌类型的 WBS 应当截然不同。
 
 ## 反模式（planner 自身要避免）
 

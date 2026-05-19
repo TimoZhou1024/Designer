@@ -175,7 +175,8 @@ async function generateCustom(
   n: number,
   modelOverride?: string,
   baseUrlOverride?: string,
-): Promise<{ urls: string[]; b64s: string[]; raw: any; endpoint: string; model: string }> {
+  qualityOverride?: string,
+): Promise<{ urls: string[]; b64s: string[]; raw: any; endpoint: string; model: string; quality?: string }> {
   const baseUrl = (baseUrlOverride ?? process.env.CUSTOM_IMAGE_BASE_URL ?? "").replace(/\/+$/, "")
   if (!baseUrl) throw new Error("CUSTOM_IMAGE_BASE_URL not set; cannot call custom image API")
   const apiKey = process.env.CUSTOM_IMAGE_API_KEY
@@ -184,15 +185,33 @@ async function generateCustom(
   if (!model) throw new Error("CUSTOM_IMAGE_MODEL not set; provide via env or args.model")
 
   // 长宽比 → OpenAI 标准 size 字符串
+  // gpt-image-2 支持任意分辨率（< 3840 边长 / 16 倍数 / 比率 ≤ 3:1 / 总像素 655360-8294400）
+  // 这些 preset 是"安全 + 主流"的取值，agent 可用 aspect 简称选择，复杂场景可后续扩展
   const sizeMap: Record<string, string> = {
-    "1:1": "1024x1024",
-    "16:9": "1792x1024",
-    "9:16": "1024x1792",
-    "4:3": "1152x896",
-    "3:4": "896x1152",
+    "1:1": "1024x1024",      // Square (general purpose)
+    "16:9": "1792x1024",     // Wide / hero
+    "9:16": "1024x1792",     // Mobile portrait / phone UI
+    "4:3": "1456x1088",      // Brochure / poster portrait
+    "3:4": "1088x1456",      // Magazine / book cover
+    "3:2": "1536x1024",      // HD landscape
+    "2:3": "1024x1536",      // HD portrait (gpt-image-2 popular)
   }
   const size = sizeMap[aspect] ?? "1024x1024"
   const endpoint = `${baseUrl}/images/generations`
+
+  // quality: 优先级 args > env CUSTOM_IMAGE_DEFAULT_QUALITY > 不传（让 endpoint 用自己默认）
+  const quality = qualityOverride ?? process.env.CUSTOM_IMAGE_DEFAULT_QUALITY
+
+  const body: Record<string, unknown> = {
+    model,
+    prompt,
+    n,
+    size,
+    // 同时兼容 SiliconFlow / Stability 等使用 image_size 字段的服务
+    image_size: size,
+    response_format: "url",
+  }
+  if (quality) body.quality = quality
 
   const res = await fetch(endpoint, {
     method: "POST",
@@ -200,15 +219,7 @@ async function generateCustom(
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model,
-      prompt,
-      n,
-      size,
-      // 同时兼容 SiliconFlow / Stability 等使用 image_size 字段的服务
-      image_size: size,
-      response_format: "url",
-    }),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`Custom API ${endpoint} error ${res.status}: ${await res.text()}`)
   const data = (await res.json()) as any
@@ -221,7 +232,7 @@ async function generateCustom(
   if (urls.length === 0 && b64s.length === 0) {
     throw new Error(`Custom API returned no images: ${JSON.stringify(data).slice(0, 500)}`)
   }
-  return { urls, b64s, raw: data, endpoint, model }
+  return { urls, b64s, raw: data, endpoint, model, quality }
 }
 
 async function generateTongyi(prompt: string, aspect: string, n: number, modelOverride?: string): Promise<{ urls: string[]; raw: any }> {
@@ -324,10 +335,29 @@ export default tool({
       .optional()
       .describe("（仅 custom）覆盖 CUSTOM_IMAGE_BASE_URL。形如 'https://api.siliconflow.cn/v1'，结尾不带 /images/generations"),
     aspect: tool.schema
-      .enum(["1:1", "16:9", "9:16", "4:3", "3:4"])
+      .enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"])
       .optional()
-      .describe("长宽比，默认 1:1（Logo）；海报推荐 9:16 或 3:4"),
-    n: tool.schema.number().int().min(1).max(4).optional().describe("生成张数，默认 1"),
+      .describe("长宽比，默认 1:1（Logo）；海报推荐 9:16 或 3:4；Hero/Banner 用 16:9 或 3:2；杂志封面用 2:3"),
+    n: tool.schema
+      .number()
+      .int()
+      .min(1)
+      .max(4)
+      .optional()
+      .describe(
+        "生成张数，默认 1。Logo 推荐传 n=4 让模型在同一上下文中产出 4 个差异化方向（更省 token、变体更多样）。" +
+          "其他类别（poster/UI/文创等）保持 n=1，因为变体方向跨度大，需 planner 在 WBS 里拆独立 task。",
+      ),
+    quality: tool.schema
+      .enum(["low", "medium", "high"])
+      .optional()
+      .describe(
+        "图像质量等级：" +
+          "high = Logo / 含小字 UI / 含密集 infographic / 含小字宣传册（细节丰富但慢且贵）；" +
+          "medium = 海报 / 主视觉 / 文创实物 / 公共家具 / 典型场景（默认推荐）；" +
+          "low = 探索性大批量 / 内部预览 / 草图风格（快且便宜）。" +
+          "缺省时读 CUSTOM_IMAGE_DEFAULT_QUALITY 环境变量，再缺省则由 endpoint 自己决定。",
+      ),
   },
   async execute(args, ctx) {
     // 关键：Open Code 不会自动加载项目根 .env，先把它注入 process.env 再读变量
@@ -390,7 +420,7 @@ export default tool({
     }
 
     // 通用响应壳：urls 和 b64s 同时容纳，落盘时各走各的分支
-    let gen: { urls: string[]; b64s?: string[]; raw: any; endpoint?: string; model?: string }
+    let gen: { urls: string[]; b64s?: string[]; raw: any; endpoint?: string; model?: string; quality?: string }
     switch (provider) {
       case "minimax":
         gen = await generateMiniMax(args.prompt, aspect, n, args.model)
@@ -402,7 +432,7 @@ export default tool({
         gen = await generateTongyi(args.prompt, aspect, n, args.model)
         break
       case "custom":
-        gen = await generateCustom(args.prompt, aspect, n, args.model, args.base_url)
+        gen = await generateCustom(args.prompt, aspect, n, args.model, args.base_url, args.quality)
         break
       default:
         throw new Error(`Unknown provider: ${provider}`)
@@ -426,6 +456,7 @@ export default tool({
         meta: {
           model: gen.model,
           endpoint: gen.endpoint,
+          quality: gen.quality,
           rawProviderResponse: gen.raw,
         },
       })
@@ -445,6 +476,7 @@ export default tool({
         meta: {
           model: gen.model,
           endpoint: gen.endpoint,
+          quality: gen.quality,
           decodedFromBase64: true,
         },
       })

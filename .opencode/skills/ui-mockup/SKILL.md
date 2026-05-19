@@ -28,24 +28,26 @@ UI mockup 要让模型同时**正确渲染**三层信息：
 
 每一层都要在 prompt 里**显式分块描述**，不能用一句话概括。
 
-## Prompt 模板
+**OpenAI 指南关键洞察**：UI mockup 应该 **"describe the product as if it already exists"**——把它当作"已经发布上线的成熟产品"来描述，而不是设计稿或概念图。这会让模型进入"shipped interface"模式而不是"design sketch"模式，结果显著更可信。
+
+## Prompt 模板（含 "shipped product" 框架）
 
 ```
-A clean modern mobile app UI mockup of [APP_NAME] inside a [DEVICE_FRAME] device shell.
-The screen shows [PAGE_TYPE].
+A realistic mobile app UI mockup for [APP_NAME], a [BRAND_DESCRIPTION] that is already launched and used by real users. The app feels practical, polished, and shipped — not a design sketch or concept art.
+Show today's [PAGE_TYPE] inside a [DEVICE_FRAME] device shell.
 
 Layout breakdown (from top to bottom):
 - Status bar: render time "9:41" and signal/battery icons, no carrier text.
-- Header / Hero zone: [HERO_DESCRIPTION], render headline "[HERO_TEXT]" in [FONT_EN] Bold large.
-- Content middle: [CONTENT_DESCRIPTION], with [N] cards/items. Each card shows [CARD_FIELD_DESCRIPTION] with text "[CARD_TEXT_EXAMPLES]".
-- Bottom tab bar: render [N_TABS] tabs with text "[TAB_LABELS]" in [FONT_EN] Regular small, with simple line icons above each label.
+- Header / Hero zone: [HERO_DESCRIPTION], render headline "[HERO_TEXT]" (verbatim, no extra characters) in [FONT_EN] Bold large.
+- Content middle: [CONTENT_DESCRIPTION], with [N] cards/items. Each card shows [CARD_FIELD_DESCRIPTION] with text "[CARD_TEXT_EXAMPLES]" (verbatim).
+- Bottom tab bar: render [N_TABS] tabs with text "[TAB_LABELS]" (verbatim, comma-separated) in [FONT_EN] Regular small, with simple line icons above each label.
 
 Color palette: primary [PRIMARY_HEX] for the brand accents and active states, neutral [BG_HEX] for the screen background, [INK_HEX] for text.
 Typography: all Chinese in [CHINESE_FONT_EN], all numbers in [MONO_FONT_EN if needed].
-Style: minimalist modern mobile UI design, iOS Human Interface Guidelines aesthetic, no skeuomorphism, generous whitespace.
-Camera angle: device shown perfectly straight from the front (no perspective tilt).
+Style: minimalist modern mobile UI design, iOS Human Interface Guidelines aesthetic, generous whitespace, subtle natural accent colors. Looks like a real, well-designed, beautiful, shipped app.
+Camera angle: device shown perfectly straight from the front (no perspective tilt, no marketing render).
 Output aspect: [DEVICE_ASPECT_RATIO].
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google, no notifications other than what's specified, no real photos that look like stock images, no clutter.
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma".
 ```
 
 **字段填充指引**：
