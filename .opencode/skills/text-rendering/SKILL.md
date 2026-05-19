@@ -13,7 +13,7 @@ description: 让文生图模型稳定渲染中文文字的 prompt 工程最佳�
 
 2026 年的主流文生图模型（gpt-image-1 / FLUX.1-dev / Recraft v3 / Ideogram v2）已经能在大多数场景稳定渲染中文文字。旧策略"no embedded text + Figma 后期"已经过时——它会浪费模型能力且增加交付复杂度。本 skill 教你如何写出**让模型稳定渲染中文**的 prompt。
 
-## 核心规则（8 条 · 综合 OpenAI gpt-image 官方指南）
+## 核心规则（7 条 · 综合 OpenAI gpt-image 官方指南 + 中文场景实战修正）
 
 ### 规则 1 ─ 文字内容必须**逐字精确**用直角引号包起来 + 关键词 verbatim
 
@@ -33,18 +33,31 @@ description: 让文生图模型稳定渲染中文文字的 prompt 工程最佳�
 ❌ 差：[长篇 prompt 描述] … and please add Chinese text "朱家角" at the bottom.
 ```
 
-### 规则 3 ─ 对**易错字 / 多音字 / 罕见字**做 letter-by-letter spell-out
+### 规则 3 ─ ⚠️ 严禁字典式拆解 / 偏旁解释 / 字符语义注释
 
-OpenAI 官方指南提到对 tricky words 要 spell out letter-by-letter。中文的等效操作是：
+**OpenAI 原指南**说的 `spell out tricky words letter-by-letter` 是针对**英文罕见单词**（K-O-D-A-K 这种字母拼写），**绝不**适用中文。中文场景如果做"字典式拆解"会触发**语义污染**（Semantic Contamination）：
 
 ```
-For the headline "創智學院", these are the four traditional Chinese characters: 創 (chuàng - to create), 智 (zhì - intelligence), 學 (xué - to learn), 院 (yuàn - institute). Render all four characters intact, with their traditional simplified strokes preserved.
+❌ 极差（语义污染陷阱）：
+  Render "创智学院". Note that 「智」(zhì - intelligence) is composed of 矢 (knife) + 口 (mouth) + 日 (sun).
+  → 模型会在背景里偷偷画刀、画嘴、画太阳，污染整张图
+
+❌ 差：
+  The brand name 「创智」 means "create intelligence" in English.
+  → 模型可能加入 robot / brain / circuit 等 "intelligence" 的视觉联想
+
+✅ 好：
+  Render the Chinese text "创智学院" (verbatim, no extra characters). Treat the characters as visual glyphs only — preserve all strokes intact, do not interpret the meaning of individual characters semantically, do not depict their radicals or pictographic origins as visual elements in the background.
 ```
 
-**触发场景**：
-- 罕见字：如"朱家角"的"角"在某些字体下笔画易丢失
-- 形近字：易被混淆为相似字（"己 / 已 / 巳"、"未 / 末"）
-- 多音字 / 歧义字：通过英文音义注释让模型确认这是哪个字
+**实战经验**：现代多模态模型（gpt-image-2 / FLUX.1-dev）对中文字符识别已经是**原生能力**——它知道「朱家角」是怎么写的、怎么连笔。你**只需要给它精确字符 + 字体 + 字号**，让它自己做字形渲染。任何"解释字含义"的注释都是反向干扰。
+
+**唯一可接受的"额外信息"**：当字符**生僻**或**形近字易混**时，可以加 `the character is visually distinct from [类似字符]` —— 这是字形层面的提示，不是语义层面：
+
+```
+✅ 可以：For 「日」, ensure it's a square shape with one horizontal middle line — visually distinct from 「目」 which has two middle lines.
+❌ 不行：「日」means sun, render the character carefully.
+```
 
 ### 规则 4 ─ 显式声明字体名称 + 字重 + 大致大小
 
@@ -60,7 +73,7 @@ For the headline "創智學院", these are the four traditional Chinese characte
 | 行书 | Chinese Xingshu / Semi-cursive |
 
 **字重**：bold / regular / light
-**大小**：large headline / medium subtitle / small caption
+**大小**：large headline / medium subtitle / small caption（也可以用相对比例如 `about 30% of canvas height`）
 
 ```
 ✅ 好：The Chinese text "朱家角" rendered in Source Han Serif Bold as a large central headline (about 30% of canvas height).
@@ -90,44 +103,38 @@ vertical traditional Chinese reading direction (top-to-bottom, right-to-left) / 
 
 **重复防御**：每条文字渲染指令都要加 `Ensure the text appears once and only once.`，否则模型可能在多个位置重复渲染同一行。OpenAI 指南在 marketing creatives 章节明确这条。
 
-### 规则 7 ─ Quality 等级与文字密度联动
+### 规则 7 ─ Quality 等级与 Negative Prompt
 
-OpenAI 指南明确：**密集小字 / 多字体 layout / 含 footnote 必须用 quality="high"**。我们的工具支持这个透传：
+OpenAI 指南：**密集小字 / 多字体 layout / 含 footnote 必须用 quality="high"**。我们的工具支持透传：
 
 | 任务类型 | 推荐 quality |
 |---|---|
 | Logo（< 6 字大字） | `high`（笔画清晰最重要） |
-| 海报 headline + subtitle（< 20 字） | `medium` 起步，不满意升 `high` |
+| 海报 headline + subtitle（< 20 字） | `high` |
 | 宣传册封面（含 footnote） | `high` |
 | UI mockup（多个 tab + button 短文字） | `high` |
 | 文创周边产品标签 | `medium` |
 | 公共家具远景导视 | `medium` |
 | 探索性变体 / 草图 | `low` |
 
-调用 `text_to_image` 时**必传** `quality` 参数，按上表选择。
-
-### 规则 8 ─ Negative Prompt 要禁止"乱码字"而不是禁止"任何字"
-
-旧 prompt 里的 `no embedded text / no AI hallucinated text` 现在要改成：
+Negative prompt 必含的字渲染相关条款：
 
 ```
-✅ 好：Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified.
-❌ 差：Negative: no embedded text, no Chinese characters.
+no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background.
 ```
 
-后者会让模型连主题文字都不渲染，违背意图。
+最后一条 `no character radicals depicted as separate visual elements` 是**反语义污染**保险丝 —— 即使别处的 prompt 不小心暗示了字含义，这条 negative 也能把 模型从那个方向拉回来。
 
-## Prompt 注入模板（已含 OpenAI 指南所有要点）
+## Prompt 注入模板（已含 OpenAI 指南所有要点 + 中文实战修正）
 
 任何主 skill 的 image prompt 都可在最前面 inject 这一段（替换占位符）：
 
 ```
 [STYLE_DIRECTIVE].
 [BRAND_DESCRIPTION].
-Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) in [FONT_EN_NAME] [WEIGHT], [SIZE_HINT], [LAYOUT_DIRECTION]. Ensure the text appears once and only once.
-[OPTIONAL: For tricky characters, spell out: 「[CHAR1]」 means [PINYIN1] - [MEANING1], 「[CHAR2]」 means [PINYIN2] - [MEANING2]. Render all characters intact with strokes preserved.]
+Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) in [FONT_EN_NAME] [WEIGHT], [SIZE_HINT], [LAYOUT_DIRECTION]. Treat the characters as visual glyphs only — preserve all strokes intact, do not interpret the meaning of individual characters semantically, do not depict their radicals as visual elements in the background. Ensure the text appears once and only once.
 [REST_OF_PROMPT_BODY].
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, [PLUS_CATEGORY_NEGATIVE].
+Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background, [PLUS_CATEGORY_NEGATIVE].
 ```
 
 ## 反模式

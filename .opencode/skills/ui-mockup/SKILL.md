@@ -30,25 +30,46 @@ UI mockup 要让模型同时**正确渲染**三层信息：
 
 **OpenAI 指南关键洞察**：UI mockup 应该 **"describe the product as if it already exists"**——把它当作"已经发布上线的成熟产品"来描述，而不是设计稿或概念图。这会让模型进入"shipped interface"模式而不是"design sketch"模式，结果显著更可信。
 
-## Prompt 模板（含 "shipped product" 框架）
+## Prompt 模板（v3.1 · "shipped product" 框架 + 完整 micro_copy 注入）
 
 ```
 A realistic mobile app UI mockup for [APP_NAME], a [BRAND_DESCRIPTION] that is already launched and used by real users. The app feels practical, polished, and shipped — not a design sketch or concept art.
 Show today's [PAGE_TYPE] inside a [DEVICE_FRAME] device shell.
 
-Layout breakdown (from top to bottom):
-- Status bar: render time "9:41" and signal/battery icons, no carrier text.
-- Header / Hero zone: [HERO_DESCRIPTION], render headline "[HERO_TEXT]" (verbatim, no extra characters) in [FONT_EN] Bold large.
-- Content middle: [CONTENT_DESCRIPTION], with [N] cards/items. Each card shows [CARD_FIELD_DESCRIPTION] with text "[CARD_TEXT_EXAMPLES]" (verbatim).
-- Bottom tab bar: render [N_TABS] tabs with text "[TAB_LABELS]" (verbatim, comma-separated) in [FONT_EN] Regular small, with simple line icons above each label.
+Render the following Chinese text exactly as specified, treating each character as a visual glyph (preserve all strokes, do not interpret semantically). Each text element appears once and only once at its specified location:
 
-Color palette: primary [PRIMARY_HEX] for the brand accents and active states, neutral [BG_HEX] for the screen background, [INK_HEX] for text.
-Typography: all Chinese in [CHINESE_FONT_EN], all numbers in [MONO_FONT_EN if needed].
-Style: minimalist modern mobile UI design, iOS Human Interface Guidelines aesthetic, generous whitespace, subtle natural accent colors. Looks like a real, well-designed, beautiful, shipped app.
+  • Hero headline (large, top of content area): "[MICRO_COPY.HEADLINE]"
+  • Hero subtitle (smaller, just under headline): "[MICRO_COPY.SUBTITLE]"
+  • Bottom tab bar (4 tabs): "[MICRO_COPY.NAVIGATION[0]]" · "[MICRO_COPY.NAVIGATION[1]]" · "[MICRO_COPY.NAVIGATION[2]]" · "[MICRO_COPY.NAVIGATION[3]]"
+  • Stat cards (small bold numbers + label, e.g. "12 处必打卡景点"):
+      "[MICRO_COPY.DATA_POINTS[0]]" · "[MICRO_COPY.DATA_POINTS[1]]" · "[MICRO_COPY.DATA_POINTS[2]]"
+  • Content rows / cards body (medium-small lines):
+      "[MICRO_COPY.BODY_LINES[0]]"
+      "[MICRO_COPY.BODY_LINES[1]]"
+  • Status bar: time "9:41" + signal/battery icons (no carrier text)
+
+Layout breakdown (top to bottom):
+- Status bar with time and indicators
+- Header / Hero zone with headline and subtitle, accented background
+- Stat cards row showing data points as bold numbers
+- Content middle: card list / row list as described in body lines
+- Bottom tab bar with 4 tabs (line icons above each label)
+
+Color palette: [PRIMARY_HEX] for brand accents and active states, [BG_HEX] for screen background, [INK_HEX] for body text. Visual hierarchy: hero zone visually prominent, tab bar subtle but readable.
+Typography: all Chinese in [CHINESE_FONT_EN]; numbers in [MONO_FONT_EN if needed].
+Style: minimalist modern mobile UI design, iOS Human Interface Guidelines aesthetic, generous breathing room, subtle natural accent colors. Looks like a real, well-designed, beautiful, shipped app.
 Camera angle: device shown perfectly straight from the front (no perspective tilt, no marketing render).
+
 Output aspect: [DEVICE_ASPECT_RATIO].
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma".
+
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma", no text duplicated more than specified.
 ```
+
+**字段填充规则**：
+- `MICRO_COPY.NAVIGATION` 必须有 4 项（移动 APP tab bar 标准），如果 task 没填，从 brand context 推断 4 个常见 tab
+- `MICRO_COPY.DATA_POINTS` 推荐 3 项（适合 hero 区下方的 stat cards 横排）
+- `MICRO_COPY.BODY_LINES` 推荐 2 项（适合中部 list 的前两条最显眼内容）
+- 任何字段为空都跳过对应行，**不要捏造数字** —— 如 data_points 没数据就在 prompt 里删掉那一行
 
 **字段填充指引**：
 - `DEVICE_FRAME`：iPhone 15 Pro / iPhone 16 / iPad Pro 11" / MacBook Pro 16"

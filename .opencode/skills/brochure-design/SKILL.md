@@ -29,31 +29,43 @@ WBS 中出现 `category: "brochure"` / 宣传册 / 折页 / 出版物 任务时�
 
 这个策略平衡了"图含字"的演示效果与"长文易出错"的模型能力边界。
 
-## Prompt 模板（OpenAI 指南 "artifact spec" 框架）
+## Prompt 模板（v3.1 · OpenAI 指南 "artifact spec" 框架 + 完整微文案）
 
 OpenAI 指南：印刷物 / 出版物的提示要写成 **"artifact spec"** —— 像规格书一样命名 deliverable、定义画布、声明层级、给精确文字。最强模式词：**"editorial print design / magazine-quality typography / professional print spread"**。
+
+⚠️ **v3.1 关键修正**：宣传册必须有完整信息层级（headline / subtitle / data_points / footnote），缺一不可。OpenAI 那个 market slide 例子之所以专业，正是因为有 `TAM $42B / "AGI Research, 2024"` 这种**具体数字 + 来源**。
 
 ```
 Create one [BROCHURE_TYPE] page that feels like a real, published printed brochure for [BRAND_NAME_CN] [BRAND_DESCRIPTION_BRIEF].
 
-Render the Chinese headline "[HEADLINE_TEXT]" (verbatim, no extra characters) in [TITLE_FONT_EN] Bold, very large, positioned [TITLE_POSITION]. Ensure the headline appears once and only once.
-Render the Chinese subtitle "[SUBTITLE_TEXT]" in [TITLE_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION]. Ensure the subtitle appears once and only once.
-[OPTIONAL: Render small caption "[CAPTION_TEXT]" in [BODY_FONT_EN] Regular small at [CAPTION_POSITION].]
+Render the following Chinese text exactly as specified, treating each character as a visual glyph (preserve all strokes, do not interpret semantically). Each text element appears once and only once at its specified location:
+  • Headline (very large, primary visual focus): "[MICRO_COPY.HEADLINE]"
+  • Subtitle (medium, just below headline): "[MICRO_COPY.SUBTITLE]"
+  • Data callouts (small badges or inline highlights, fact-rich):
+      "[MICRO_COPY.DATA_POINTS[0]]"  ·  "[MICRO_COPY.DATA_POINTS[1]]"  ·  "[MICRO_COPY.DATA_POINTS[2]]"
+  • Footnote (smallest, bottom edge — source / publisher / year): "[MICRO_COPY.FOOTNOTE]"
 
 Body content: abstract horizontal text strokes suggesting paragraph body copy in two short blocks, NOT actual readable Chinese paragraph text (placeholder strokes only — these will be filled in post-production).
 
+Typography:
+  - Headline in [TITLE_FONT_EN] Bold
+  - Subtitle in [TITLE_FONT_EN] Regular
+  - Data callouts in [BODY_FONT_EN] Bold small (numbers can be in [MONO_FONT_EN])
+  - Footnote in [BODY_FONT_EN] Regular very small
+
 Layout: [LAYOUT_DESCRIPTION].
 Visual elements: [HERO_VISUAL_DESCRIPTION].
-Color palette: primary [PRIMARY_HEX] for headline and brand mark, [ACCENT_HEX] for highlights, neutral [BG_HEX] for paper.
+Color palette: [PRIMARY_HEX] for headline and brand mark, [ACCENT_HEX] for highlights and data callouts, [BG_HEX] for paper. Composition naturally distributed.
 Material suggestion: [PAPER_HINT] (visible in the rendering as subtle texture: weighted matte / textured handmade / glossy art / kraft natural).
 Style: editorial print design, magazine-quality typography, polished spacing, professional print spread aesthetic. Looks like it belongs in a real published brochure, not a template.
 Output aspect: [ASPECT_RATIO].
-Negative: no garbled characters in the headline/subtitle/caption, no missing strokes, no Western letters mistaken for Chinese in the title areas, no text duplicated more than specified, no logos other than the brand's, no watermarks, no Lorem Ipsum (the placeholder body copy should look like Chinese strokes, not Latin letters), no template-style stock layout.
+
+Negative: no garbled characters in any text element, no missing strokes, no Western letters mistaken for Chinese in the title areas, no character radicals depicted as separate visual elements, no text duplicated more than specified, no logos other than the brand's, no watermarks, no Lorem Ipsum (the placeholder body copy should look like Chinese strokes, not Latin letters), no template-style stock layout.
 ```
 
 **字段填充指引**：
 - `BROCHURE_TYPE`：cover / two-page spread / tri-fold pamphlet
-- `LAYOUT_DESCRIPTION`：例 "asymmetric grid with hero image occupying 60% upper area, headline in lower-left third, body copy strokes filling lower-right third"
+- `LAYOUT_DESCRIPTION`：例 "asymmetric grid with hero image dominating the upper portion, headline anchored in the lower-left, body copy strokes balancing the lower-right"（描述方位与权重，**不要**给精确百分比）
 - `HERO_VISUAL_DESCRIPTION`：依品牌调性——朱家角用"ink-wash painting of Fang Sheng Bridge"；学院用"abstract geometric pattern in brand colors"
 - `PAPER_HINT`：weighted matte paper / textured handmade paper / glossy art paper / kraft natural paper
 - `ASPECT_RATIO`：A4 cover ≈ 0.707:1 → 用 5:7 / spread → 2:1 / tri-fold → 3:1
@@ -79,7 +91,7 @@ A printed brochure cover design for 朱家角 (ZhuJiaJiao Ancient Town), a 1700-
 Render the Chinese headline "朱家角" in Source Han Serif Bold, very large (about 30% of canvas height), positioned in the upper-left third.
 Render the Chinese subtitle "千年古镇 · 江南水乡" in Source Han Serif Regular, medium, positioned just below the headline.
 Body content: abstract horizontal text strokes suggesting paragraph body copy near the bottom-left, no actual readable Chinese paragraph text (placeholder).
-Layout: asymmetric vertical layout with ink-wash hero illustration occupying right two-thirds and lower half, headline area on upper-left with generous whitespace.
+Layout: asymmetric vertical layout with ink-wash hero illustration dominating the right side and lower portion, headline area anchored in the upper-left with generous breathing room.
 Visual elements: ink-wash painting of the Fang Sheng arch bridge fading into mist, with subtle vermillion seal stamp in the lower-right corner.
 Color palette: primary #1A1A1A ink black for headline, accent #C73E2E vermillion for seal stamp, neutral cream #FBFAF6 for paper background.
 Material suggestion: weighted matte cream paper, visible as very subtle handmade paper texture in the rendering.

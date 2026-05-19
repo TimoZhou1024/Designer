@@ -11,31 +11,55 @@ WBS 中出现 `category: "poster"` / 主视觉 / banner / 宣传图任务时加�
 
 ## 构图原则（5 条）
 
-1. **聚焦法则** — 海报必须有**唯一视觉焦点**，焦点占画面 30-50% 区域
+1. **聚焦法则** — 海报必须有**唯一视觉焦点**，焦点占据画面**显眼位置**（约 1/3 ~ 1/2 视觉权重）
 2. **三分法栅格** — 焦点放在三分线交点而非死中央
-3. **色彩等级** — 主色面积 ≥ 60%，辅助色 20-30%，中性色填充剩余；禁止三色等分
-4. **留白节奏** — 上下左右各留 8-15% 安全边距
+3. **色彩等级** — 主色为画面**主导色调**，辅助色仅用于**点睛位置**，中性色填充呼吸空间；**禁止**让三色等量分配（视觉会失衡），但也**禁止**在 prompt 里指定数学百分比（模型不擅长面积计算，会为凑数学约束牺牲美学）
+4. **留白节奏** — 上下左右留出**舒适的安全边距**，让画面有呼吸感
 5. **品牌一致** — 复用 brand-spec.json 的主色/字体，与 Logo 视觉同源
 
-## Prompt 模板（已含 text-rendering + OpenAI 指南拟真触发词）
+## Prompt 模板（v3.1 · 完整微文案层级 + OpenAI 拟真触发词）
 
 OpenAI 指南：海报场景应用 **photorealistic / editorial poster / magazine cover quality** 等关键词触发模型的"production-quality"模式。如果品牌方向偏写实摄影，加入 photography language（lens / lighting / framing）+ "real texture (fabric wear, imperfections)"。
+
+⚠️ **v3.1 重要修正**：旧模板只塞 headline + subtitle 导致画面"字太少 / AI 通稿感"。新模板**强制注入完整信息层级**：headline / subtitle / body / data points / footnote。这是 design fidelity 的关键。
 
 ```
 Premium editorial poster, magazine cover quality, [STYLE_DIRECTIVE].
 Brand poster for [BRAND_NAME_EN] ([BRAND_NAME_CN]).
-Render the Chinese headline "[HEADLINE_TEXT]" (verbatim, no extra characters) in [TITLE_FONT_EN] Bold, large (about 25-30% of canvas height), positioned at [TITLE_POSITION]. Ensure the headline appears once and only once.
-Render the Chinese subtitle "[SUBTITLE_TEXT]" in [BODY_FONT_EN] Regular, medium, positioned [SUBTITLE_POSITION]. Ensure the subtitle appears once and only once.
+
+Render the following Chinese text exactly as specified, treating each character as a visual glyph (preserve all strokes, do not interpret semantically). Each text element appears once and only once:
+  • Headline (largest, most prominent): "[MICRO_COPY.HEADLINE]"
+  • Subtitle (medium, just below headline): "[MICRO_COPY.SUBTITLE]"
+  • Body lines (small, supporting layer):
+      - "[MICRO_COPY.BODY_LINES[0]]"
+      - "[MICRO_COPY.BODY_LINES[1]]"  (if present)
+  • Data points (small, fact-rich callouts as visual markers):
+      "[MICRO_COPY.DATA_POINTS[0]]"  ·  "[MICRO_COPY.DATA_POINTS[1]]"  ·  ...
+  • Footnote (smallest, at the bottom edge): "[MICRO_COPY.FOOTNOTE]"
+
+Typography:
+  - Headline in [TITLE_FONT_EN] Bold
+  - Subtitle in [TITLE_FONT_EN] Regular
+  - Body / data points / footnote in [BODY_FONT_EN] Regular small
+All Chinese characters in the same font family for visual cohesion.
+
 Theme: [POSTER_THEME].
-Composition: [COMPOSITION_PATTERN].
-Color palette: primary [PRIMARY_HEX] dominant ~60%, accent [ACCENT_HEX] ~25%, neutral [PAPER_HEX] balance.
+Composition: [COMPOSITION_PATTERN — describe layout in directional terms like "headline upper third, hero image dominating the middle, data points scattered along the lower edge, footnote bottom-center", NOT in percentage areas].
+Color palette: [PRIMARY_HEX] dominant, [ACCENT_HEX] used sparingly for emphasis, [PAPER_HEX] as breathing space. Let the composition feel naturally distributed.
 Mood: [MOOD_KEYWORDS].
 Visual elements: [VISUAL_METAPHORS].
 Style: [STYLE_QUALIFIER — flat editorial illustration / photorealistic 35mm / ink-wash painting / vector-friendly].
 [OPTIONAL: For photorealistic mode add: shot like a 35mm film photograph, [LENS]mm lens, [LIGHTING], shallow depth of field, subtle film grain, real texture and natural color balance, no studio polish.]
+
 Output aspect: 9:16 portrait, ready for both print and social media.
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no realistic human faces unless specified, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
+
+Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background, no realistic human faces unless specified, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
 ```
+
+**字段填充规则**：
+- 所有 `MICRO_COPY.*` 字段直接从 `task.micro_copy` 读取，无值则跳过该行（不要捏造）
+- `BODY_LINES` / `DATA_POINTS` 是数组，**逐项展开**为带项目符号的列表
+- 如果 `MICRO_COPY` 整体为空（极少见），fallback 用 `embed_text` 当 headline，但 critic 会扣 Function 维度分
 
 **字段填充规则**：
 - `HEADLINE_TEXT` 必填——通常来自 copywriting.md 的 slogan 主推或 brand promise（4-12 字）
@@ -78,7 +102,7 @@ Render the Chinese headline "梦回水乡" in Source Han Serif Bold, very large 
 Render the Chinese subtitle "千年江南 · 一桥一梦" in Source Han Serif Regular, medium, positioned just below the headline.
 Theme: a poetic morning view of the ancient stone bridge and waterways awakening at dawn.
 Composition: vertical layered composition — hero band top with text and misty sky, content middle with the iconic Fang Sheng Bridge over rippled water, identity strip bottom with subtle vermillion seal logo.
-Color palette: primary #1A1A1A ink black dominant ~55% (sky and silhouettes), accent #C73E2E vermillion ~10% (only the seal stamp), neutral paper #FBFAF6 ~35% (water and mist).
+Color palette: #1A1A1A ink black as the dominant tone (sky, silhouettes, headline), #C73E2E vermillion used very sparingly for a single seal stamp accent only, #FBFAF6 paper-color providing balance through water and mist. Let the composition feel naturally distributed — do not force exact area percentages.
 Mood: tranquil, poetic, nostalgic, refined.
 Visual elements: a curved stone arch bridge in mid-distance, soft morning mist rising from the canal water, a single moored wooden boat under the bridge, ink-wash style distant rooftops with upturned eaves.
 Style: editorial poster, magazine cover quality, ink-wash painting blended with flat vector elements, vector-friendly.
