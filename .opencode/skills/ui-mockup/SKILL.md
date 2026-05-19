@@ -106,5 +106,4 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
 - ❌ **同时塞超过 6 条中文文字到一个 UI**：模型容易渲染错乱，超过应拆成多张 mockup
 - ❌ **使用 Lorem Ipsum 占位**：UI mockup 必须用真实中文内容
 - ❌ **要求"3D 透视立体"**：保持设备正面平视最稳定
-- ❌ **传 provider 参数**：违反 designer.md 第 6 条
 - ❌ **多张 UI 全是首页**：变体应该跨页面（首页 + 详情页 + 我的），而不是首页的 3 个色彩版本

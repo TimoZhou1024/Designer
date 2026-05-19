@@ -93,7 +93,6 @@ For direction in task.variant (e.g. ["wordmark", "seal", "abstract-mark", "handw
     n: 1,                  ⚠️ 关键：每次 n=1，绝对不要 n=4
     quality: "high"        ⚠️ Logo 必须 high
   })
-  ⚠️ 不传 provider 参数（违反 designer.md 第 6 条）
 ↓
 工具落盘 logo/logo-wordmark.png / logo-seal.png / logo-abstract-mark.png / logo-handwritten.png
 ↓
@@ -141,4 +140,3 @@ text_to_image({
 - ❌ **不传 quality / 传 medium**：Logo 是品牌根基，必须 high
 - ❌ **品牌名超过 6 字时硬塞**：超长品牌名建议 Logo 用品牌名缩写或主字
 - ❌ **不读 brand-spec.json 凭印象填色**：HEX 必须从 brand-spec 取
-- ❌ **传 provider 参数给 text_to_image**：违反 designer.md 第 6 条

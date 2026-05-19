@@ -114,5 +114,4 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
 
 - ❌ **生成不存在的怪异产品形态**：不要让模型生成"会发光的明信片"等奇幻产品
 - ❌ **场景过于写实导致模型暴露幻觉**：写实人手 / 写实人脸都不要出现在产品图里
-- ❌ **传 provider 参数**：违反 designer.md 第 6 条
 - ❌ **同一类别 3 张全是同一产品微调**：3 张应该是 3 个不同产品（如明信片 + 雪糕 + 丝巾），而不是 3 张明信片

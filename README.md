@@ -76,18 +76,56 @@ cp .env.example .env
 bun install
 ```
 
-### 4.4 运行
+### 4.4 运行（双模式）
+
+**模式 A · 全自动** （默认）：
 
 ```powershell
-# 方式 A：TUI 交互
 opencode
-# 进入 TUI 后输入：/design 请为创智学院做一套品牌形象设计
-
-# 方式 B：单次命令
-opencode run --agent design-orchestrator "请为创智学院做一套品牌形象设计"
+# /design 请为创智学院做一套品牌形象设计
 ```
 
-完成后到 `artifacts/chuangzhi-college-<timestamp>/` 查看产出。
+20 分钟内一气呵成，全程无人工干预。
+
+**模式 B · 人机协同动态问卷**（v3.4 升级）：
+
+```powershell
+opencode
+# /design-review 请为创智学院做一套品牌形象设计
+```
+
+planner 在 designer 启动前**主动出题**——基于 brief 自主生成 5-8 个关键偏好选项（带风险等级、默认值、AI 推荐理由）：
+
+```
+🎨 设计偏好选择
+
+我已经做完调研。在生成最终方案之前，请选择以下 5 个关键偏好。
+⭐ 标记的是我基于调研推荐的默认选项。
+
+1 / 5 · 品牌设计方向 · 风险等级：致命
+| 选 | 标识 | 选项 | 说明 |
+| ⭐ | oriental-elegance | 东方雅韵 | 墨黑+朱砂 / 衬线 / 留白 |
+|   | vibrant-modern | 活力创新 | 橙绿主色 / 圆润黑体 |
+|   | academic-classic | 学术经典 | 深蓝+酒红 / 徽章式 |
+
+2 / 5 · 设计类别组合 · 风险等级：重要
+（多选，含 logo / poster / merch / furniture / ui / brochure）
+
+...
+```
+
+用户回复方式：
+- `全部默认` → 一键通过所有 ⭐ 推荐项
+- 结构化或自然语言调整（如"画面密度选 minimal"）
+- `重新出题` 或 `取消`
+
+用户选择**作为硬约束**级联到 wbs 与所有下游 prompt，保证偏好真正落地而不是表面对话。
+
+适合关键品牌 / 答辩演示 / 心中有偏好但没想过如何表达的场景。决策过程透明可追溯，但**不强制人工干预**——一句"全部默认"即可全程不调整推进。
+
+---
+
+完成后到 `artifacts/<brand-slug>-<timestamp>/` 查看产出。
 
 ## 5. 设计资产示例（创智学院 demo）
 

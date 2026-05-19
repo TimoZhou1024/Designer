@@ -90,7 +90,6 @@ Negative: no garbled characters, no Western letters mistaken for Chinese, no mis
 - ❌ **保留旧策略 "no embedded text"**：本 skill 已升级，海报必须含中文标题
 - ❌ **试图一张海报装下所有信息**：海报承担"情绪 + 视觉锤 + 短标题"，详情留给宣传册
 - ❌ **强行 photorealistic**：除非品牌方向明确要写实摄影，否则用 flat / illustrative 更稳
-- ❌ **传 provider 参数给 text_to_image**：违反 designer.md 第 6 条
 - ❌ **变体之间只是色彩微调**：变体应在"构图模式 + 隐喻物"维度变化
 
 ## 实例（朱家角 - 主视觉海报）

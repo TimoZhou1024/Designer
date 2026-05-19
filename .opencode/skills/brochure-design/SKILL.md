@@ -113,5 +113,4 @@ Negative: no garbled characters in the headline/subtitle, no missing strokes, no
 
 - ❌ **要求模型渲染长段中文正文**：超过 30 字的长文必失败，用 placeholder strokes
 - ❌ **变体只是色彩或字号微调**：变体应跨"封面 + 跨页 + 折页"，或跨"主题章节"
-- ❌ **传 provider 参数**：违反 designer.md 第 6 条
 - ❌ **过度复杂的版式**：宣传册比海报更克制，留白比例应 ≥ 35%

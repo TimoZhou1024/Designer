@@ -104,10 +104,10 @@ interface ImageResult {
 const PLACEHOLDER_PNG_B64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
 
-async function generateMiniMax(prompt: string, aspect: string, n: number, modelOverride?: string): Promise<{ urls: string[]; raw: any }> {
+async function generateMiniMax(prompt: string, aspect: string, n: number): Promise<{ urls: string[]; raw: any }> {
   const apiKey = process.env.MINIMAX_API_KEY
   if (!apiKey) throw new Error("MINIMAX_API_KEY not set; cannot call MiniMax image API")
-  const model = modelOverride ?? process.env.MINIMAX_IMAGE_MODEL ?? "image-01"
+  const model = process.env.MINIMAX_IMAGE_MODEL ?? "image-01"
 
   const res = await fetch("https://api.minimax.chat/v1/image_generation", {
     method: "POST",
@@ -130,10 +130,10 @@ async function generateMiniMax(prompt: string, aspect: string, n: number, modelO
   return { urls, raw: data }
 }
 
-async function generateOpenAI(prompt: string, aspect: string, n: number, modelOverride?: string): Promise<{ urls: string[]; raw: any }> {
+async function generateOpenAI(prompt: string, aspect: string, n: number): Promise<{ urls: string[]; raw: any }> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error("OPENAI_API_KEY not set; cannot call OpenAI image API")
-  const model = modelOverride ?? process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1"
+  const model = process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1"
   const sizeMap: Record<string, string> = {
     "1:1": "1024x1024",
     "16:9": "1792x1024",
@@ -173,16 +173,14 @@ async function generateCustom(
   prompt: string,
   aspect: string,
   n: number,
-  modelOverride?: string,
-  baseUrlOverride?: string,
   qualityOverride?: string,
 ): Promise<{ urls: string[]; b64s: string[]; raw: any; endpoint: string; model: string; quality?: string }> {
-  const baseUrl = (baseUrlOverride ?? process.env.CUSTOM_IMAGE_BASE_URL ?? "").replace(/\/+$/, "")
+  const baseUrl = (process.env.CUSTOM_IMAGE_BASE_URL ?? "").replace(/\/+$/, "")
   if (!baseUrl) throw new Error("CUSTOM_IMAGE_BASE_URL not set; cannot call custom image API")
   const apiKey = process.env.CUSTOM_IMAGE_API_KEY
   if (!apiKey) throw new Error("CUSTOM_IMAGE_API_KEY not set; cannot call custom image API")
-  const model = modelOverride ?? process.env.CUSTOM_IMAGE_MODEL
-  if (!model) throw new Error("CUSTOM_IMAGE_MODEL not set; provide via env or args.model")
+  const model = process.env.CUSTOM_IMAGE_MODEL
+  if (!model) throw new Error("CUSTOM_IMAGE_MODEL not set in .env")
 
   // 长宽比 → OpenAI 标准 size 字符串
   // gpt-image-2 支持任意分辨率（< 3840 边长 / 16 倍数 / 比率 ≤ 3:1 / 总像素 655360-8294400）
@@ -235,10 +233,10 @@ async function generateCustom(
   return { urls, b64s, raw: data, endpoint, model, quality }
 }
 
-async function generateTongyi(prompt: string, aspect: string, n: number, modelOverride?: string): Promise<{ urls: string[]; raw: any }> {
+async function generateTongyi(prompt: string, aspect: string, n: number): Promise<{ urls: string[]; raw: any }> {
   const apiKey = process.env.DASHSCOPE_API_KEY
   if (!apiKey) throw new Error("DASHSCOPE_API_KEY not set; cannot call 通义万相 API")
-  const model = modelOverride ?? process.env.TONGYI_IMAGE_MODEL ?? "wanx-v1"
+  const model = process.env.TONGYI_IMAGE_MODEL ?? "wanx-v1"
 
   const submit = await fetch("https://dashscope.aliyuncs.com/api/v1/services/aigc/text2image/image-synthesis", {
     method: "POST",
@@ -319,21 +317,13 @@ export default tool({
     artifact_slug: tool.schema
       .string()
       .describe("当前 artifact 目录名（例如 'chuangzhi-college-20260514'），所有产物落到此目录下"),
-    provider: tool.schema
-      .enum(["minimax", "openai", "tongyi", "custom", "dryrun"])
-      .optional()
-      .describe(
-        "⚠️ 调用方禁止传此参数。Provider 由 .env 的 DESIGNER_IMAGE_PROVIDER 决定。" +
-          "此字段仅供工具内部测试用，传了会破坏用户配置。",
-      ),
-    model: tool.schema
-      .string()
-      .optional()
-      .describe("覆盖 .env 默认 model。例如调用同一 custom 服务时切换 'black-forest-labs/FLUX.1-dev' 与 'stabilityai/stable-diffusion-3-5-large'。API key 仍只走 .env，本字段不接受 key"),
-    base_url: tool.schema
-      .string()
-      .optional()
-      .describe("（仅 custom）覆盖 CUSTOM_IMAGE_BASE_URL。形如 'https://api.siliconflow.cn/v1'，结尾不带 /images/generations"),
+    // ⚠️ provider / model / base_url 字段已于 v3.5 从 schema 中移除（接口设计原则）：
+    //   - provider: 完全由 .env 中的 DESIGNER_IMAGE_PROVIDER 决定
+    //   - model:    完全由 .env 中的 *_IMAGE_MODEL 决定
+    //   - base_url: 完全由 .env 中的 CUSTOM_IMAGE_BASE_URL 决定
+    //   - api_key:  完全由 .env 中的 *_API_KEY 决定
+    // 移除原因：保留 schema 字段会诱导 LLM 越权（即使 description 写"禁止传"也会被填充）。
+    // 测试 / 切换 provider 请通过修改 .env 文件实现，或用 scripts/test-image-gen.ts 单元测试。
     aspect: tool.schema
       .enum(["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"])
       .optional()
@@ -363,10 +353,23 @@ export default tool({
     // 关键：Open Code 不会自动加载项目根 .env，先把它注入 process.env 再读变量
     const dotenv = await loadDotenvOnce(ctx.directory)
 
-    const provider: Provider =
-      (args.provider as Provider) ??
-      (process.env.DESIGNER_IMAGE_PROVIDER as Provider) ??
-      "dryrun"
+    // Provider 解析：完全由 .env 中的 DESIGNER_IMAGE_PROVIDER 决定
+    //
+    // v3.5 设计变更：
+    //   - 移除 args.provider / args.model / args.base_url 三个 schema 字段
+    //   - 让 LLM 物理上无法越权传这些字段（schema 里没有的字段，模型生成不了）
+    //   - 如果 .env 未配置 DESIGNER_IMAGE_PROVIDER，直接抛错（不 fallback 到 dryrun）
+    //   - dryrun 只在用户在 .env 里**显式设置** DESIGNER_IMAGE_PROVIDER=dryrun 时启用
+    const envProvider = process.env.DESIGNER_IMAGE_PROVIDER as Provider | undefined
+    if (!envProvider) {
+      throw new Error(
+        "DESIGNER_IMAGE_PROVIDER not set in .env. " +
+          "This tool requires explicit provider configuration via .env file " +
+          "(e.g. DESIGNER_IMAGE_PROVIDER=custom + CUSTOM_IMAGE_BASE_URL/KEY/MODEL). " +
+          "Tool calls will fail until .env is properly configured.",
+      )
+    }
+    const provider: Provider = envProvider
     const aspect = args.aspect ?? "1:1"
     const n = args.n ?? 1
 
@@ -377,7 +380,10 @@ export default tool({
     const results: ImageResult[] = []
 
     if (provider === "dryrun") {
-      // 诊断信息：让 designer 能从产物 meta 反推为何走了 dryrun
+      // ⚠️ v3.5 起：dryrun 只能由用户在 .env 显式设置 DESIGNER_IMAGE_PROVIDER=dryrun 触发
+      //   - args.provider 通路已在前面被硬阻断
+      //   - 没设 env 也已在前面抛错
+      // 所以这里的 provider==="dryrun" 100% 是用户显式选择的，不是 LLM 越权或 fallback
       const diag = {
         ctxDirectory: ctx.directory,
         cwd: (() => { try { return process.cwd() } catch { return "(unknown)" } })(),
@@ -390,18 +396,8 @@ export default tool({
           CUSTOM_IMAGE_MODEL: process.env.CUSTOM_IMAGE_MODEL ?? null,
           MINIMAX_API_KEY: process.env.MINIMAX_API_KEY ? "(set)" : null,
         },
-        providerResolution:
-          args.provider !== undefined
-            ? `explicit args.provider="${args.provider}"`
-            : process.env.DESIGNER_IMAGE_PROVIDER !== undefined
-            ? `env DESIGNER_IMAGE_PROVIDER="${process.env.DESIGNER_IMAGE_PROVIDER}"`
-            : 'fell back to "dryrun" (neither args.provider nor DESIGNER_IMAGE_PROVIDER set)',
-        hint:
-          args.provider !== "dryrun" && process.env.DESIGNER_IMAGE_PROVIDER !== "dryrun"
-            ? "若期望真实出图，请确认项目根 .env 含 DESIGNER_IMAGE_PROVIDER 与对应 *_API_KEY。" +
-              "若 dotenvTriedPaths 中没有指向真实 .env 的路径，说明 ctx.directory 不是项目根，" +
-              "需在 opencode.json 里把 model/provider/key 写到 env 字段，或用 shell.env hook 注入。"
-            : "explicit dryrun mode",
+        providerResolution: `env DESIGNER_IMAGE_PROVIDER="dryrun" (user explicitly chose dryrun mode in .env)`,
+        hint: "User explicitly set DESIGNER_IMAGE_PROVIDER=dryrun in .env. To get real images, change it to 'custom' / 'minimax' / 'openai' / 'tongyi' and configure the corresponding *_API_KEY.",
       }
       for (let i = 0; i < n; i++) {
         const suffix = n > 1 ? `-${i + 1}` : ""
@@ -420,19 +416,22 @@ export default tool({
     }
 
     // 通用响应壳：urls 和 b64s 同时容纳，落盘时各走各的分支
+    // v3.5 起：args.model / args.base_url 已从 schema 移除（防 LLM 越权）
+    //   - model / base_url：完全由 .env 决定，不接受 args 覆盖
+    //   - quality：保留 args.quality（这是合法的设计参数，每张图都可能不同）
     let gen: { urls: string[]; b64s?: string[]; raw: any; endpoint?: string; model?: string; quality?: string }
     switch (provider) {
       case "minimax":
-        gen = await generateMiniMax(args.prompt, aspect, n, args.model)
+        gen = await generateMiniMax(args.prompt, aspect, n)
         break
       case "openai":
-        gen = await generateOpenAI(args.prompt, aspect, n, args.model)
+        gen = await generateOpenAI(args.prompt, aspect, n)
         break
       case "tongyi":
-        gen = await generateTongyi(args.prompt, aspect, n, args.model)
+        gen = await generateTongyi(args.prompt, aspect, n)
         break
       case "custom":
-        gen = await generateCustom(args.prompt, aspect, n, args.model, args.base_url, args.quality)
+        gen = await generateCustom(args.prompt, aspect, n, args.quality)
         break
       default:
         throw new Error(`Unknown provider: ${provider}`)

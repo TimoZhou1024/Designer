@@ -35,6 +35,19 @@ permission:
 
 ## 标准工作流（按顺序执行，禁止跳步）
 
+### Mode 识别 ─ auto vs review（v3.3 新增）
+
+orchestrator 工作流支持两种模式：
+
+| 模式 | 触发方式 | 行为 |
+|---|---|---|
+| **auto**（默认） | `/design <需求>` 或 prompt 没有 `mode=review` 指令 | 全自动流水线，规划 → 执行 → 评审一气呵成 |
+| **review** | `/design-review <需求>` 或 prompt 含 `mode=review` 指令 | 在 planner 阶段插入**动态问卷**（Step 1a/1b/1c），让用户主动选择关键偏好（设计方向 / 类别组合 / 画面密度 / 文字密度 等），偏好作为硬约束传递给 designer |
+
+⚠️ **关键设计原则**：自动化是默认，交互是可选。review 模式只是在主流程中**插入** checkpoint，**不替换**任何步骤。auto 与 review 共享 Step 0、0.5、2、3、4、5；唯一差异是 Step 1 在 review 模式下扩展为 Step 1a/1b/1c 三阶段。
+
+**判定方法**：从用户第一次消息或 system prompt 中检测 `mode` 关键字。若不明确就默认 `auto`。
+
 ### Step 0 ─ 生成 artifact_slug
 
 从用户需求里提取品牌名（中英混合时优先选英文小写连字符化），加 timestamp：
@@ -67,20 +80,140 @@ researcher 会落盘 `artifacts/<slug>/research-brief.md` 并返回完整 brief�
 
 ### Step 1 ─ 调用 planner
 
+⚠️ **v3.4 升级**：根据当前 mode 走不同 planner 调用流程：
+- `auto` 模式：单次 planner 调用（mode=plan）即得 wbs
+- `review` 模式：**三阶段**调用（Step 1a → 1b → 1c），让用户在问卷中选偏好后再产 wbs
+
+#### Step 1（auto mode 简化版）
+
 ```
 task({
   description: "拆解品牌设计需求 WBS",
   prompt: `
+    mode: plan
     用户需求：<原始一字不差>
     artifact_slug: <Step 0 生成>
     Research Brief（来自 researcher）：<Step 0.5 完整 brief>
-    请基于 brief 智能决定 ≥4 类设计 + 每类变体策略，输出 WBS（JSON 数组）。
+    请基于 brief 智能决定 ≥4 类设计 + 每类变体策略，输出 { wbs, decision_brief } JSON。
   `,
   subagent_type: "planner"
 })
 ```
 
-planner 应返回结构化 JSON。把这个 JSON **完整保留**到下一步。
+planner 应返回结构化 JSON。**v3.3+ 起**：planner 输出 **单一 JSON 对象**含 `wbs` 和 `decision_brief` 两个 key，不再是裸 JSON 数组。
+
+```js
+const plannerOutput = JSON.parse(plannerReturnString)
+const wbs = plannerOutput.wbs                 // 给 designer 用
+const decisionBrief = plannerOutput.decision_brief  // 答辩可见的 reasoning trail
+```
+
+把 wbs 和 decisionBrief **完整保留**到下一步。auto 模式直接跳到 Step 2。
+
+#### Step 1a ─ Options 阶段（仅 review 模式 · v3.4 新增）
+
+调 planner 用 `options` mode 让它**自主生成动态问卷**：
+
+```
+task({
+  description: "生成动态规划问卷",
+  prompt: `
+    mode: options
+    用户需求：<原始一字不差>
+    artifact_slug: <Step 0 生成>
+    Research Brief（来自 researcher）：<Step 0.5 完整 brief>
+    请基于 brief 自主决定要问用户哪些 5-8 个关键决策选项，每个含可选项 + 默认值 + 推理 + 风险等级。
+    输出 { planning_options: [...] } JSON。
+  `,
+  subagent_type: "planner"
+})
+```
+
+得到 `planning_options` 数组后跳到 Step 1b。
+
+#### Step 1b ─ 渲染问卷给用户（仅 review 模式 · v3.4 新增）
+
+向用户**直接发送 markdown 消息**（不是调 task，是 orchestrator 写文本回复）：
+
+````markdown
+## 🎨 设计偏好选择
+
+我已经做完调研。在生成最终方案之前，请选择以下 N 个关键偏好。
+
+⭐ 标记的是我基于调研推荐的默认选项。您可以：
+- 一句 **`全部默认`** 直接通过
+- 单独修改某几项（如"画面密度选 minimal"）
+- 自然语言描述偏好让我理解
+
+---
+
+### 1 / N · [planning_options[i].title]
+> [planning_options[i].description] · 风险等级：[risk_level]
+
+| 选 | 标识 | 选项 | 说明 |
+|---|---|---|---|
+| ⭐ | `<value>` | **<label>** | <description> · <preview if any> |
+|    | `<value>` | <label> | <description> |
+|    | `<value>` | <label> | <description> |
+
+**推荐理由**：<default_reasoning>
+
+---
+
+### 2 / N · [...]
+（依此循环输出全部展示项；注意 depends_on 字段——若条件不满足跳过该项）
+
+---
+
+### 您的回复方式
+
+请回复任一形式：
+- **`全部默认`** / **`OK`** / **`go ahead`** —— 全部使用 ⭐ 推荐项
+- **结构化**：例如 `1. oriental-elegance, 2. [logo, merch, ui], 3. 3, 4. minimal, 5. structured`
+- **自然语言**：例如 "方向选东方雅韵；类别去掉 furniture 加 poster；其他默认"
+- **`重新出题`** —— 重新生成问卷
+- **`取消`** —— 中止
+
+回复后我会把您的选择硬约束到下一步规划中。
+````
+
+⚠️ **关键约束**：发完此消息后**停下等待用户回复**，不要继续执行。Open Code chat 模式会让 user 回复自然回到 orchestrator 上下文。
+
+**Depends_on 处理**：渲染问卷时，跳过 `depends_on` 字段未满足的选项（例如"merch-variant-count"只在用户当前的选择含 "merch" 时才展示——但 Step 1b 阶段用户还没选，所以**首轮渲染时所有 depends_on 默认满足**，由后续 Step 1c 解析时才正确处理）。
+
+**收到用户回复后的判断**：
+
+| 用户回复 | orchestrator 行为 |
+|---|---|
+| `全部默认` / `OK` / `go ahead` 等正面词 | 把每个选项的 `default` 值组装成 user_choices，跳到 Step 1c |
+| 含明确选择（结构化或自然语言） | 解析为 user_choices（默认 + 用户改动叠加），跳到 Step 1c |
+| `重新出题` / `换问题` | 回到 Step 1a 重新调 planner options mode |
+| `取消` / `中止` | 立即结束流程 |
+| 模糊不清 | 反问澄清一次（最多 1 次） |
+
+#### Step 1c ─ Plan-with-choices 阶段（仅 review 模式 · v3.4 新增）
+
+调 planner 用 `plan-with-choices` mode：
+
+```
+task({
+  description: "基于用户偏好规划",
+  prompt: `
+    mode: plan-with-choices
+    用户需求：<原始一字不差>
+    artifact_slug: <Step 0 生成>
+    Research Brief（来自 researcher）：<Step 0.5 完整 brief>
+    user_choices: <Step 1b 解析得到的 JSON>
+
+    请将用户选择作为硬约束，输出 { wbs, decision_brief } JSON。
+    所有 wbs task 的 notes 字段必须级联反映用户偏好（如 image-density / text-density 等）。
+    若用户选择与 brief 推荐冲突，在 decision_brief 对应项的 reasoning 中明确标注。
+  `,
+  subagent_type: "planner"
+})
+```
+
+得到 wbs + decision_brief 后**直接进入 Step 2**——用户已在 Step 1b 表达过偏好，此处不再二次确认。
 
 ### Step 2 ─ 调用 designer
 

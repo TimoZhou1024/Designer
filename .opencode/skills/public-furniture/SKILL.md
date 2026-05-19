@@ -95,4 +95,3 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
 - ❌ **现代品牌用古镇风格家具或反之**：导视风格必须服从 brand-spec.direction
 - ❌ **生成科幻发光家具**：除非品牌方向明确科技未来，否则保持物质感真实
 - ❌ **把文字写在不合理的位置**：例如把"北大街"写在凳子靠背上
-- ❌ **传 provider 参数**：违反 designer.md 第 6 条
