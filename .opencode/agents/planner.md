@@ -94,6 +94,7 @@ WBS 是 JSON 数组，**总项数 6-12** 之间（少于 6 项视为深度不足
     "headline": "大标题（≤8 字，最显眼）",
     "subtitle": "副标题（≤15 字，标题下方）",
     "body_lines": ["可选 1-3 条短句（每条 ≤20 字，作为正文层）"],
+    "body_paragraph": "可选完整段落（30-80 字，仅宣传册 / 出版物 / 招生页 hero 等需要 magazine-style body copy 的场景使用，需是真实可读中文，不是占位）",
     "data_points": ["可选 1-4 条带数字的事实（如 '5700+ Stars'、'EST. 1368'、'31 所合作高校'）"],
     "footnote": "可选脚注（来源 / 版权 / 联系方式 / 网址）",
     "navigation": "可选（仅 UI 类任务）：tab 标签数组，如 ['探索','路线','美食','我的']"
@@ -124,7 +125,7 @@ WBS（节选）：
   { "id": "furniture-bench", "name": "公共家具-座椅", "category": "furniture", "deliverable": "artifacts/<slug>/furniture/bench-A.png", "depends_on": ["brand-spec"], "skill": "public-furniture", "variant": "公共座椅 - 侧视图 + 植入Logo", "embed_text": "朱家角", "micro_copy": { "headline": "朱家角" }, "notes": "深色实木+朱砂Logo小标识；座椅字少留品牌印记即可" },
   { "id": "ui-home", "name": "旅游 APP-首页", "category": "ui", "deliverable": "artifacts/<slug>/ui/home.png", "depends_on": ["brand-spec"], "skill": "ui-mockup", "variant": "iPhone 15 mockup - 首页发现", "embed_text": "朱家角 探索 路线 美食 我的", "micro_copy": { "headline": "朱家角古镇", "subtitle": "千年江南·一桥一梦", "data_points": ["12 处必打卡景点", "8 条精品路线", "200+ 本地美食"], "navigation": ["探索", "路线", "美食", "我的"], "body_lines": ["热门景点：放生桥 · 课植园 · 北大街", "今日特惠：船游古镇 ¥58 起"] }, "notes": "顶部 hero 区双桥实景；底部 4 tabs；首页要密度感" },
   { "id": "ui-detail", "name": "旅游 APP-景点详情", "category": "ui", "deliverable": "artifacts/<slug>/ui/detail.png", "depends_on": ["brand-spec"], "skill": "ui-mockup", "variant": "iPhone 15 mockup - 放生桥详情", "embed_text": "放生桥 距您 320 米", "micro_copy": { "headline": "放生桥", "subtitle": "明隆庆五年 · 1571 年建造", "data_points": ["★ 4.8 (3.2 万评价)", "距您 320 m · 步行 4 分钟", "门票 免费"], "body_lines": ["五孔石拱桥 · 沪上现存最长石桥", "推荐时段：清晨 6:00-8:00 雾景"] }, "notes": "地图+实景图+人均评价；信息层级要清晰" },
-  { "id": "brochure-cover", "name": "宣传册-封面", "category": "brochure", "deliverable": "artifacts/<slug>/brochure/cover.png", "depends_on": ["brand-spec"], "skill": "brochure-design", "variant": "封面 - A4 竖版", "embed_text": "朱家角 千年古镇 江南水乡", "micro_copy": { "headline": "朱家角", "subtitle": "千年古镇 · 江南水乡", "data_points": ["公元 264 年建镇", "国家 5A 级景区", "上海后花园"], "footnote": "上海青浦区·朱家角古镇文化旅游局 · 2026" }, "notes": "极简留白封面；标题居中烫金" }
+  { "id": "brochure-cover", "name": "宣传册-封面", "category": "brochure", "deliverable": "artifacts/<slug>/brochure/cover.png", "depends_on": ["brand-spec"], "skill": "brochure-design", "variant": "封面 - A4 竖版", "embed_text": "朱家角 千年古镇 江南水乡", "micro_copy": { "headline": "朱家角", "subtitle": "千年古镇 · 江南水乡", "body_paragraph": "枕水而居，千年古镇朱家角以九条老街、三十六座古桥、四百余间明清宅院构筑出江南最完整的水乡肌理。漫步北大街，听摇橹声穿过放生桥下，茶香与墨香在课植园交织——这里仍保留着上海最古老的呼吸节奏。", "data_points": ["公元 264 年建镇", "国家 5A 级景区", "上海后花园"], "footnote": "上海青浦区·朱家角古镇文化旅游局 · 2026" }, "notes": "极简留白封面；标题居中烫金；body_paragraph 用于内页或封底背书段" }
 ]
 ```
 

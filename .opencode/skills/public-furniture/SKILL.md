@@ -20,22 +20,36 @@ WBS 中出现 `category: "furniture"` / 公共家具 / 导视 / 街头家具 任
 | **古镇灯笼 (Lantern)** | 古镇街巷悬挂 | 小（单字 / 双字） |
 | **校园展示架 (Display Board)** | 校园公告区 | 大（标题 + 正文占位） |
 
-## Prompt 模板（OpenAI 指南 architectural visualization 模式 + 场景式 prompt）
+## Prompt 模板（v3.2 · OpenAI 指南 architectural visualization + 35mm film 参数）
 
-OpenAI 指南：环境物件 / 公共家具最稳定的模式词是 **"architectural visualization" / "real-world setting" / "photographed in situ"**——这会触发模型用建筑可视化级别的材质、光影、比例来渲染物件。重点是**把物件嵌进真实空间**，不是孤立产品图。
+OpenAI 指南：环境物件 / 公共家具最稳定的模式词是 **"architectural visualization" / "real-world setting" / "photographed in situ"**——这会触发模型用建筑可视化级别的材质、光影、比例来渲染物件。
+
+⚠️ **v3.2 关键升级**：加入**光学参数**——35mm architectural film photograph + eye-level + natural sidelight。这是触发"街拍真实感"latent 的开关，让模型从"产品孤立"切到"嵌入街景"。
 
 ```
-Architectural visualization of a [FURNITURE_TYPE] for [BRAND_NAME_CN], photographed in its real-world setting as if it were already installed and in use.
-Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT], [SIZE_HINT]. Ensure the text appears once and only once.
+Shot like a 35mm architectural film photograph of a [FURNITURE_TYPE] for [BRAND_NAME_CN], photographed in its real-world setting as if it were already installed and in use.
+Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT] (described as [FONT_ANATOMY]), [SIZE_HINT]. Ensure the text appears once and only once.
+
 Furniture detail: [PHYSICAL_DESCRIPTION].
+
 Setting: [LOCATION_CONTEXT].
-Material palette: [PRIMARY_MATERIAL] for the structure, [ACCENT_MATERIAL] for the text and brand mark. Real material wear: [WEAR_HINT — slightly weathered patina / fresh installation gloss / aged copper green].
-Color palette: complementing the brand's primary [PRIMARY_HEX] subtly.
-Style: architectural visualization with cinematic atmosphere, NOT product render isolation.
-Camera angle: [ANGLE_HINT — three-quarter view / low angle / direct front], at human eye level (~1.6m), as if a passerby took the photo.
-Lighting: [LIGHTING_HINT — soft afternoon sidelight / golden hour / overcast diffuse], with realistic ambient shadows on the ground.
+
+Material palette: [PRIMARY_MATERIAL_WITH_REALISM] (e.g. weathered cedar wood with visible grain and slight knots) for the structure, [ACCENT_MATERIAL_WITH_REALISM] (e.g. blackened forged iron with subtle hammer marks) for the text and brand mark.
+Material realism: real material wear — slightly weathered patina / fresh installation gloss / aged copper green / hand-tooled imperfections. NO factory-perfect plastic look.
+Color palette: complementing the brand's [PRIMARY_HEX] subtly through material tone, not direct color overlay.
+
+Optical setup (camera + lighting):
+  - 35mm film photograph aesthetic, eye-level (~1.6m human height) — as if a passerby took the photo
+  - [LIGHTING_HINT — soft afternoon sidelight from west / golden-hour warm directional / overcast diffuse north light]
+  - Realistic ambient shadows on the ground, subtle atmospheric depth
+  - Subtle 35mm film grain
+  - Natural color balance, NO HDR, NO color grading, NO cinematic LUT
+
+Style: architectural visualization with cinematic atmosphere (NOT product render, NOT studio isolation).
+Camera angle: [ANGLE_HINT — three-quarter view / low angle / direct front], at human eye level.
 Output aspect: 4:3 or 16:9 for full scene context.
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no text duplicated more than specified, no realistic human faces, no other brand logos, no watermarks, no neon, no studio-isolated product look, no levitating objects.
+
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no text duplicated more than specified, no realistic human faces, no other brand logos, no watermarks, no neon, no studio-isolated product look, no levitating objects, no plastic-shiny CG surfaces.
 ```
 
 **字段填充指引**：

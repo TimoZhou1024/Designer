@@ -24,22 +24,42 @@ WBS 中出现 `category: "merch"` / 文创 / 周边 / 衍生品 任务时加载�
 2. **场景**：纯白背景孤立 / 摆放在桌面木质感 / 挂在场景墙
 3. **文字位置与内容**：从 task.embed_text 取，决定要在产品哪一面渲染
 
-## Prompt 模板（含 OpenAI 指南 premium product photography 模式）
+## Prompt 模板（v3.2 · OpenAI 指南 premium product photography 模式 + 光学参数）
 
-OpenAI 指南：产品 mockup 关键模式词是 **"product mockup photography" / "premium product photography" / "studio lighting"**——这些会触发模型进入"零售级"渲染模式。包装产品额外加 **"sharp label printing" / "high-end retail presentation"**。
+OpenAI 指南：产品 mockup 关键模式词是 **"product mockup photography" / "premium product photography" / "studio lighting"**——这些会触发模型进入"零售级"渲染模式。
+
+⚠️ **v3.2 关键升级**：加入**光学参数**（lens focal length + aperture + film grain + light source）—— OpenAI 指南 §4.3 明确说："use photography language (lens, lighting, framing) and explicitly ask for real texture (pores, wrinkles, fabric wear, imperfections)"。这是把模型从"塑料感 CG 渲染"latent 切到"真实摄影"latent 的关键开关。
 
 ```
 Premium product mockup photography for a [PRODUCT_TYPE] from [BRAND_NAME_CN] brand.
-Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT], [PRINT_STYLE_HINT]. Ensure the text appears once and only once on the product.
+Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) on the [SURFACE_DETAIL] in [FONT_EN] [WEIGHT] (described as [FONT_ANATOMY]), [PRINT_STYLE_HINT]. Ensure the text appears once and only once on the product.
+
 Product detail: [PHYSICAL_FORM_DESCRIPTION].
+
 Visual scene: [SCENE_SETTING].
-Color palette: primary [PRIMARY_HEX], accent [ACCENT_HEX], on [BG_HEX] background or surface.
-Style: [STYLE_HINT — flat lay product photography / 3D product render / hand-drawn product illustration / collage].
-Material realism: [MATERIAL_HINT — slightly worn paper texture / handmade fabric weave / matte ceramic glaze / lacquered wood grain]. Real texture, real material, no overly polished plastic look.
-Lighting: [LIGHTING_HINT — soft natural daylight / studio softbox / golden hour], with realistic contact shadows.
+
+Color palette: [PRIMARY_HEX] rendered as [PRIMARY_MATERIAL_DESCRIPTION], [ACCENT_HEX] rendered as [ACCENT_MATERIAL_DESCRIPTION], on [BG_HEX] background or surface.
+Material realism: [MATERIAL_REALISM_HINT] — slightly worn paper texture / handmade fabric weave with visible threads / matte ceramic glaze / lacquered wood grain catching light. Real material wear, real material imperfections, no overly polished plastic look.
+
+Optical setup (camera + lighting):
+  - Shot on 85mm macro lens, f/2.8 for shallow depth of field
+  - Soft directional light from upper-left (north-window-style softbox)
+  - Subtle realistic contact shadows under the product
+  - Natural color balance, NO color grading, NO HDR boost
+  - Optional: subtle 35mm film grain to break the "AI smooth" surface
+
+Style: editorial product photography (NOT 3D render, NOT CG illustration).
+Camera angle: [ANGLE_HINT — three-quarter view / overhead flat lay / direct profile].
 Output aspect: [ASPECT_RATIO].
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no text duplicated more than specified, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified.
+
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no text duplicated more than specified, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified, no plastic-shiny CG look, no over-saturated colors, no studio reflection halos.
 ```
+
+**字段填充指引**：
+- `FONT_ANATOMY`：从 text-rendering skill 的字体配对表取 anatomy 描述
+- `MATERIAL_REALISM_HINT`：选 1-2 个真实材质特征
+- `PRIMARY_MATERIAL_DESCRIPTION` / `ACCENT_MATERIAL_DESCRIPTION`：见改进-5 材质感光语言
+- 光学 setup 是**默认模板**，特殊场景可调（如产品需要硬光时改 `direct hard sunlight from above`）
 
 **字段填充指引**：
 - `PRODUCT_TYPE`：明信片 = postcard / 雪糕 = popsicle / 丝巾 = silk scarf / 帆布袋 = canvas tote / T恤 = T-shirt / 笔记本 = notebook / 马克杯 = ceramic mug / 印章 = stamp seal
@@ -68,7 +88,7 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
 Product mockup photography for a postcard from 朱家角 (ZhuJiaJiao) brand.
 Render the Chinese headline "梦回水乡" in Source Han Serif Bold large at the top, and "朱家角 · 千年古镇" in Source Han Serif Regular medium near the bottom, all in vermillion #C73E2E ink on cream paper.
 Product detail: a 10×15cm horizontal postcard, slight texture suggesting hand-pressed paper, soft deckle edges.
-Visual scene: full-bleed front cover featuring the Fang Sheng arch bridge in ink-wash style across the lower two-thirds, with negative space top for the headline.
+Visual scene: full-bleed front cover featuring the Fang Sheng arch bridge in ink-wash style anchoring the lower portion of the canvas, with elegant negative space breathing at the top where the headline rests.
 Color palette: primary #1A1A1A ink for the bridge illustration, accent #C73E2E vermillion for the text, on warm cream #FBFAF6 paper background.
 Style: ink-wash painting illustration combined with classical Chinese postcard aesthetic.
 Lighting: soft natural daylight, no harsh shadows.

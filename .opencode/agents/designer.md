@@ -114,7 +114,7 @@ orchestrator 会传给你：
 
 ## Prompt 工程要点（让 text_to_image 出好图）
 
-1. **永远先读 brand-spec.json**：把主色 HEX、字体名、调性词作为 prompt 的硬约束
+1. **永远先读 brand-spec.json**：把主色 HEX + material 字段（v3.2 新增物理材质描述）+ 字体名 + 字体 anatomy（v3.2 新增）+ 调性词作为 prompt 的硬约束。**关键升级**：把 `#1A1A1A` 升级到 `#1A1A1A (rendered as matte charcoal ink, completely unreflective)` — 模型 latent 里材质语言比 HEX 强得多
 2. **逐字遵循 skill 提供的模板**：不要自由发挥结构，只填充 [PLACEHOLDER]
 3. **每次调用前打磨 prompt**：在 mind 中过一遍"这个 prompt 给 5 个不同模型是否都能稳定产出"
 4. **明确的 Negative Prompt**：每个 image prompt 都必须含 negative 部分（含 text-rendering 指定的中文渲染 negatives）

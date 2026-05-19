@@ -45,7 +45,7 @@ All Chinese characters in the same font family for visual cohesion.
 
 Theme: [POSTER_THEME].
 Composition: [COMPOSITION_PATTERN — describe layout in directional terms like "headline upper third, hero image dominating the middle, data points scattered along the lower edge, footnote bottom-center", NOT in percentage areas].
-Color palette: [PRIMARY_HEX] dominant, [ACCENT_HEX] used sparingly for emphasis, [PAPER_HEX] as breathing space. Let the composition feel naturally distributed.
+Color palette: [PRIMARY_HEX] (rendered as [PRIMARY_MATERIAL] — e.g. matte ink, brushed metal, glossy ceramic) dominant, [ACCENT_HEX] (rendered as [ACCENT_MATERIAL]) used sparingly for emphasis, [PAPER_HEX] (rendered as [PAPER_MATERIAL] — e.g. handmade kozo paper, weighted matte cream, smooth bone-white) as breathing space. Let the composition feel naturally distributed.
 Mood: [MOOD_KEYWORDS].
 Visual elements: [VISUAL_METAPHORS].
 Style: [STYLE_QUALIFIER — flat editorial illustration / photorealistic 35mm / ink-wash painting / vector-friendly].

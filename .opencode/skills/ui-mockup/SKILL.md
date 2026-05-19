@@ -56,13 +56,18 @@ Layout breakdown (top to bottom):
 - Bottom tab bar with 4 tabs (line icons above each label)
 
 Color palette: [PRIMARY_HEX] for brand accents and active states, [BG_HEX] for screen background, [INK_HEX] for body text. Visual hierarchy: hero zone visually prominent, tab bar subtle but readable.
-Typography: all Chinese in [CHINESE_FONT_EN]; numbers in [MONO_FONT_EN if needed].
+Typography: all Chinese in [CHINESE_FONT_EN] (described as [CHINESE_FONT_ANATOMY]); numbers in [MONO_FONT_EN if needed].
 Style: minimalist modern mobile UI design, iOS Human Interface Guidelines aesthetic, generous breathing room, subtle natural accent colors. Looks like a real, well-designed, beautiful, shipped app.
-Camera angle: device shown perfectly straight from the front (no perspective tilt, no marketing render).
+
+Optical setup (device shell render):
+  - The device frame appears photographed (not rendered) — soft top-down lighting on the bezel, subtle glass reflection on the screen edge but the screen content stays sharp and legible
+  - Shot like an Apple product page studio photo: even softbox lighting, no harsh shadows, no fingerprints, very subtle drop shadow under the device
+  - Device shown perfectly straight from the front (no perspective tilt, no marketing angle)
+  - Natural color balance for the screen content, NO over-saturation, NO HDR
 
 Output aspect: [DEVICE_ASPECT_RATIO].
 
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma", no text duplicated more than specified.
+Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma", no text duplicated more than specified, no plastic-shiny device shell, no perspective distortion.
 ```
 
 **字段填充规则**：
