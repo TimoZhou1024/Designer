@@ -49,7 +49,7 @@ Style: architectural visualization with cinematic atmosphere (NOT product render
 Camera angle: [ANGLE_HINT — three-quarter view / low angle / direct front], at human eye level.
 Output aspect: 4:3 or 16:9 for full scene context.
 
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no text duplicated more than specified, no realistic human faces, no other brand logos, no watermarks, no neon, no studio-isolated product look, no levitating objects, no plastic-shiny CG surfaces.
+Negative: no text duplicated more than specified, no realistic human faces, no other brand logos, no watermarks, no neon, no studio-isolated product look, no levitating objects, no plastic-shiny CG surfaces.
 ```
 
 **字段填充指引**：
@@ -88,7 +88,7 @@ Style: architectural visualization with cinematic atmosphere.
 Camera angle: three-quarter view from a pedestrian's eye level.
 Lighting: soft afternoon sidelight casting gentle shadow toward foreground.
 Output aspect: 4:3 portrait-of-place.
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no realistic human faces, no other brand logos, no watermarks, no neon, no modern street signs.
+Negative: no realistic human faces, no other brand logos, no watermarks, no neon, no modern street signs.
 ```
 
 ## 反模式

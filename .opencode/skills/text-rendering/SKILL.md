@@ -11,7 +11,7 @@ description: 让文生图模型稳定渲染中文文字的 prompt 工程最佳�
 
 ## 背景
 
-2026 年的主流文生图模型（gpt-image-1 / FLUX.1-dev / Recraft v3 / Ideogram v2）已经能在大多数场景稳定渲染中文文字。旧策略"no embedded text + Figma 后期"已经过时——它会浪费模型能力且增加交付复杂度。本 skill 教你如何写出**让模型稳定渲染中文**的 prompt。
+2026 年的主流文生图模型（gpt-image-2 / gpt-image-1 / FLUX.1-dev / Recraft v3 / Ideogram v2）已经能在大多数场景稳定渲染中文文字，并且可以直接在 prompt 里承载较多真实中文内容。旧策略"no embedded text + Figma 后期"已经过时——它会浪费模型能力且增加交付复杂度。本 skill 教你如何写出**让模型稳定渲染中文**的 prompt。
 
 ## 核心规则（7 条 · 综合 OpenAI gpt-image 官方指南 + 中文场景实战修正）
 
@@ -119,14 +119,15 @@ vertical traditional Chinese reading direction (top-to-bottom, right-to-left) / 
 |---|---|
 | 1-4 字（如 Logo / 标题） | 极稳定 ✅✅✅ |
 | 5-12 字（如 slogan / 副标题） | 稳定 ✅✅ |
-| 13-30 字（如一段 tagline） | 一般 ⚠️ |
-| > 30 字（如正文段落） | 容易出错 ❌ |
+| 13-30 字（如一段 tagline） | 稳定 ✅ |
+| 30-80 字（如宣传册正文 / UI 说明段） | gpt-image-2 下可用，建议 quality="high" ✅ |
+| > 80 字（多段正文 / 表格密集文字） | 建议拆分版面或缩短 ⚠️ |
 
-**经验法则**：若需要长文（如宣传册正文 / UI 界面长说明），**只 prompt 关键标题字 + 占位段落**，正文段落用"placeholder lorem-style strokes"代替，由 Figma 后期填真实文字。
+**经验法则**：若需要长文（如宣传册正文 / UI 界面长说明），优先直接写入真实中文段落，控制在 30-80 字，并简化构图层级。不要用 placeholder strokes 伪装中文正文；那会降低真实交付物质感。
 
 **重复防御**：每条文字渲染指令都要加 `Ensure the text appears once and only once.`，否则模型可能在多个位置重复渲染同一行。OpenAI 指南在 marketing creatives 章节明确这条。
 
-### 规则 7 ─ Quality 等级与 Negative Prompt
+### 规则 7 ─ Quality 等级与类别 Negative Prompt
 
 OpenAI 指南：**密集小字 / 多字体 layout / 含 footnote 必须用 quality="high"**。我们的工具支持透传：
 
@@ -140,13 +141,7 @@ OpenAI 指南：**密集小字 / 多字体 layout / 含 footnote 必须用 quali
 | 公共家具远景导视 | `medium` |
 | 探索性变体 / 草图 | `low` |
 
-Negative prompt 必含的字渲染相关条款：
-
-```
-no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background.
-```
-
-最后一条 `no character radicals depicted as separate visual elements` 是**反语义污染**保险丝 —— 即使别处的 prompt 不小心暗示了字含义，这条 negative 也能把 模型从那个方向拉回来。
+Negative prompt 只放**类别级排除项**，例如不要水印、不要无关品牌、不要版权角色、不要过度塑料感、不要 2x2 拼图等。不要再把中文字符渲染纠错写进 Negative 段；中文字形质量由正文 prompt 的精确字符、verbatim、字体、位置和字号约束来保证。
 
 ## Prompt 注入模板（已含 OpenAI 指南所有要点 + 中文实战修正）
 
@@ -157,7 +152,7 @@ no garbled characters, no Western letters mistaken for Chinese, no missing strok
 [BRAND_DESCRIPTION].
 Render the Chinese text "[EMBED_TEXT]" (verbatim, no extra characters) in [FONT_EN_NAME] [WEIGHT] (described as [FONT_ANATOMY]), [SIZE_HINT], [LAYOUT_DIRECTION]. Treat the characters as visual glyphs only — preserve all strokes intact, do not interpret the meaning of individual characters semantically, do not depict their radicals as visual elements in the background. Ensure the text appears once and only once.
 [REST_OF_PROMPT_BODY].
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background, [PLUS_CATEGORY_NEGATIVE].
+Negative: [CATEGORY_NEGATIVE_ONLY].
 ```
 
 ## 附录：构图语言备忘（Gestalt 完形心理学 + 视觉张力）
@@ -191,10 +186,11 @@ Negative: no garbled characters, no Western letters mistaken for Chinese, no mis
 - ❌ 字号给具体 px 值 —— 模型不懂 px，给比例描述如 "30% of canvas height"
 - ❌ 同时要求复杂构图 + 多行长文字 —— 二选一，长文字时构图必须简化
 - ❌ Negative 段保留旧的 "no embedded text" —— 直接覆盖前面所有"渲染中文"的指令
+- ❌ 把中文字形纠错放进 Negative 段 —— gpt-image-2 更适合在正文 prompt 里直接接收真实中文与排版约束
 
 ## 失败兜底
 
 若多次重跑仍出现明显字形错误（笔画错 / 偏旁错 / 渲染成日文汉字）：
 1. 把字数减半（拆成两条 prompt）
 2. 把字体改为 Source Han Sans（黑体比宋体更稳）
-3. 仍失败 → fallback 到"prompt 中不渲染文字 + 在产物 README 标注后期补字"，并在 critic 报告里扣 Detail 维度分
+3. 仍失败 → 降低同张图内的文字层级或拆成多张物料；只有生产稿阶段才考虑后期补字

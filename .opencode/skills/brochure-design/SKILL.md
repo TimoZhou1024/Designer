@@ -65,11 +65,11 @@ Style: editorial print design, magazine-quality typography, polished spacing, pr
 
 Output aspect: [ASPECT_RATIO].
 
-Negative: no garbled characters in any text element, no missing strokes, no Western letters mistaken for Chinese in the title areas, no character radicals depicted as separate visual elements, no text duplicated more than specified, no logos other than the brand's, no watermarks, no Lorem Ipsum, no abstract text strokes pretending to be Chinese, no template-style stock layout.
+Negative: no text duplicated more than specified, no logos other than the brand's, no watermarks, no Lorem Ipsum, no placeholder typography strokes, no template-style stock layout.
 ```
 
 **字段填充指引**：
-- `MICRO_COPY.BODY_PARAGRAPH` 是 v3.2 新增 —— 当 task 提供时**优先用真实段落**，没提供时再退到"abstract strokes"占位（极少数情况）
+- `MICRO_COPY.BODY_PARAGRAPH` 是 v3.2 新增 —— 当 task 提供时**优先用真实段落**；没提供时省略正文层，不再退回假笔画占位
 - 真文案段落控制在 30-80 字最稳定；超过 100 字要么截短要么拆成 2 段
 
 **字段填充指引**：
@@ -100,18 +100,18 @@ Negative: no garbled characters in any text element, no missing strokes, no West
 A printed brochure cover design for 朱家角 (ZhuJiaJiao Ancient Town), a 1700-year-old Jiangnan water town in Shanghai.
 Render the Chinese headline "朱家角" in Source Han Serif Bold, very large (about 30% of canvas height), anchored in the upper-left with strong negative space breathing around it.
 Render the Chinese subtitle "千年古镇 · 江南水乡" in Source Han Serif Regular, medium, positioned just below the headline.
-Body content: abstract horizontal text strokes suggesting paragraph body copy near the bottom-left, no actual readable Chinese paragraph text (placeholder).
+Body paragraph near the bottom-left: "朱家角以九条老街、三十六座古桥与水岸人家构成江南生活的温柔切面。清晨的放生桥、午后的阿婆茶、傍晚的摇橹声，共同留下古镇最真实的呼吸。"
 Layout: asymmetric layout with the ink-wash hero illustration acting as the primary visual anchor along the right and lower edge, the headline placed at the upper-left as a counter-balance, the body copy and seal stamp aligned along a shared vertical axis below the headline. Strong negative space connects the elements.
 Visual elements: ink-wash painting of the Fang Sheng arch bridge fading into mist, with subtle vermillion seal stamp in the lower-right corner.
 Color palette: primary #1A1A1A ink black for headline, accent #C73E2E vermillion for seal stamp, neutral cream #FBFAF6 for paper background.
 Material suggestion: weighted matte cream paper, visible as very subtle handmade paper texture in the rendering.
 Style: editorial print design with classical Chinese aesthetic, magazine-quality typography.
 Output aspect: 5:7 (A-series cover).
-Negative: no garbled characters in the headline/subtitle, no missing strokes, no Western letters mistaken for Chinese in the title areas, no logos other than the brand's, no watermarks, no Lorem Ipsum, no real photographs (the visual is illustration only).
+Negative: no logos other than the brand's, no watermarks, no Lorem Ipsum, no placeholder typography strokes, no real photographs (the visual is illustration only).
 ```
 
 ## 反模式
 
-- ❌ **要求模型渲染长段中文正文**：超过 30 字的长文必失败，用 placeholder strokes
+- ❌ **用假笔画占位替代正文**：gpt-image-2 可以直接承载 30-80 字真实中文段落，优先写真实文案
 - ❌ **变体只是色彩或字号微调**：变体应跨"封面 + 跨页 + 折页"，或跨"主题章节"
 - ❌ **过度复杂的版式**：宣传册比海报更克制，留白比例应 ≥ 35%

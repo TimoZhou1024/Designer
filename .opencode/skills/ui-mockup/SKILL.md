@@ -67,7 +67,7 @@ Optical setup (device shell render):
 
 Output aspect: [DEVICE_ASPECT_RATIO].
 
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma", no text duplicated more than specified, no plastic-shiny device shell, no perspective distortion.
+Negative: no Lorem Ipsum placeholder, no other brand logos like Twitter/Apple/Google in the UI content, no notifications other than what's specified, no real photos that look like stock images, no concept-art "wow" lighting, no clutter, no design-tool watermarks like "Sketch / Figma", no text duplicated more than specified, no plastic-shiny device shell, no perspective distortion.
 ```
 
 **字段填充规则**：
@@ -104,7 +104,7 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
 
 ## 反模式
 
-- ❌ **同时塞超过 6 条中文文字到一个 UI**：模型容易渲染错乱，超过应拆成多张 mockup
+- ❌ **把大量中文塞进无层级 UI**：可以直接写真实中文，但必须按 hero / tab / card / footnote 分层组织；信息过密时拆成多张 mockup
 - ❌ **使用 Lorem Ipsum 占位**：UI mockup 必须用真实中文内容
 - ❌ **要求"3D 透视立体"**：保持设备正面平视最稳定
 - ❌ **多张 UI 全是首页**：变体应该跨页面（首页 + 详情页 + 我的），而不是首页的 3 个色彩版本
