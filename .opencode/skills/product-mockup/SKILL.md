@@ -52,7 +52,7 @@ Style: editorial product photography (NOT 3D render, NOT CG illustration).
 Camera angle: [ANGLE_HINT — three-quarter view / overhead flat lay / direct profile].
 Output aspect: [ASPECT_RATIO].
 
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no character radicals depicted as separate visual elements, no text duplicated more than specified, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified, no plastic-shiny CG look, no over-saturated colors, no studio reflection halos.
+Negative: no text duplicated more than specified, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no realistic human hands holding the product unless specified, no plastic-shiny CG look, no over-saturated colors, no studio reflection halos.
 ```
 
 **字段填充指引**：
@@ -93,7 +93,7 @@ Color palette: primary #1A1A1A ink for the bridge illustration, accent #C73E2E v
 Style: ink-wash painting illustration combined with classical Chinese postcard aesthetic.
 Lighting: soft natural daylight, no harsh shadows.
 Output aspect: 4:3 horizontal.
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no postage stamps unless specified.
+Negative: no logos other than the brand's, no watermarks, no copyrighted patterns, no clutter, no postage stamps unless specified.
 ```
 
 ## 实例（朱家角 - 雪糕包装）
@@ -107,7 +107,7 @@ Color palette: primary #C73E2E vermillion red for the wrapper, gold foil text, d
 Style: editorial product photography, slightly stylized with subtle ink wash overlay.
 Lighting: soft directional from upper-left, gentle highlights on foil text.
 Output aspect: 1:1.
-Negative: no garbled characters, no missing strokes, no Western letters mistaken for Chinese, no other brand logos, no watermarks, no melting effects.
+Negative: no other brand logos, no watermarks, no melting effects.
 ```
 
 ## 反模式

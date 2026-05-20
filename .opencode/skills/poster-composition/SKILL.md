@@ -53,7 +53,7 @@ Style: [STYLE_QUALIFIER — flat editorial illustration / photorealistic 35mm / 
 
 Output aspect: 9:16 portrait, ready for both print and social media.
 
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than specified, no character radicals depicted as separate visual elements in the background, no realistic human faces unless specified, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
+Negative: no realistic human faces unless specified, no embedded extra text beyond what's specified, no logos, no watermarks, no copyrighted characters, no clutter, no chromatic aberration.
 ```
 
 **字段填充规则**：
@@ -106,5 +106,5 @@ Mood: tranquil, poetic, nostalgic, refined.
 Visual elements: a curved stone arch bridge in mid-distance, soft morning mist rising from the canal water, a single moored wooden boat under the bridge, ink-wash style distant rooftops with upturned eaves.
 Style: editorial poster, magazine cover quality, ink-wash painting blended with flat vector elements, vector-friendly.
 Output aspect: 9:16 portrait, ready for both print and social media.
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no realistic human faces, no embedded extra text, no watermarks, no copyrighted characters, no clutter, no neon.
+Negative: no realistic human faces, no embedded extra text, no watermarks, no copyrighted characters, no clutter, no neon.
 ```

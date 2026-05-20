@@ -117,7 +117,7 @@ orchestrator 会传给你：
 1. **永远先读 brand-spec.json**：把主色 HEX + material 字段（v3.2 新增物理材质描述）+ 字体名 + 字体 anatomy（v3.2 新增）+ 调性词作为 prompt 的硬约束。**关键升级**：把 `#1A1A1A` 升级到 `#1A1A1A (rendered as matte charcoal ink, completely unreflective)` — 模型 latent 里材质语言比 HEX 强得多
 2. **逐字遵循 skill 提供的模板**：不要自由发挥结构，只填充 [PLACEHOLDER]
 3. **每次调用前打磨 prompt**：在 mind 中过一遍"这个 prompt 给 5 个不同模型是否都能稳定产出"
-4. **明确的 Negative Prompt**：每个 image prompt 都必须含 negative 部分（含 text-rendering 指定的中文渲染 negatives）
+4. **明确的 Negative Prompt**：每个 image prompt 都必须含 negative 部分，但只写类别级排除项（无关品牌、版权角色、水印、过度塑料感、2x2 拼图等）；不要把中文字符渲染纠错写进 Negative 段
 5. **变体显著差异**：同类别不同变体必须**视觉显著差异**——从 task.variant 字段决定差异维度
 6. **embed_text 必须严格逐字注入**：从 task.embed_text 取的中文文字必须**原封不动**用直角引号 `「」` 或英文双引号 `"…"` 包起来出现在 prompt"Render the Chinese text" 位置——这是 text-rendering skill 的核心规则
 7. **Logo 必须循环执行（Task-Level Fan-Out）**：当 task.category === "logo" 且 task.variant 是数组时，**对数组每一项循环调用 1 次** text_to_image（每次 n=1 + quality="high" + prompt 锁定该 direction）。**严禁** `n=4 + prompt 内列多方向` —— 这会让模型揉风格或画 2x2 网格
@@ -129,16 +129,16 @@ orchestrator 会传给你：
 
 | category | 任务示例 | quality | 理由 |
 |---|---|---|---|
-| `logo` | Logo（n=4 探索） | **`high`** | 笔画清晰最重要；中文字符不能糊；品牌根基不可妥协 |
-| `poster` | 主视觉海报 | **`high`** | 含 headline + subtitle 两层文字 + 视觉焦点，medium 容易糊字 |
+| `logo` | Logo（n=4 探索） | **`high`** | 品牌根基不可妥协；high 用于保证字形边缘、线条和留白稳定 |
+| `poster` | 主视觉海报 | **`high`** | 含 headline + subtitle 两层文字 + 视觉焦点，high 更适合最终交付图 |
 | `merch` | 文创实物（明信片 / 雪糕 / 丝巾） | **`medium`** | 产品摄影风格，medium 拟真度足够；只有"印章 / 烫金细节" 多的产品升 high |
 | `furniture` | 公共家具远景 | **`medium`** | 远景导视牌的远距离观看场景，medium 已可读 |
-| `ui` | APP UI mockup | **`high`** | 多个中文短文字（tab/button/卡片），medium 必出错字 |
+| `ui` | APP UI mockup | **`high`** | UI 同时含多层信息与小字号，high 更适合保留界面细节 |
 | `brochure` | 宣传册封面 / 跨页 | **`high`** | 含 headline + subtitle + footnote 多层文字，需要 high 保印刷质量 |
 | `infographic` (如有) | 信息图 | **`high`** | dense layout + 标签密集，OpenAI 指南明确推荐 high |
 | `探索性 / 内部预览` | 草图 / 内部 spike | **`low`** | 预算敏感场景；只验证构图意图 |
 
-**口诀**：含中文小字 / 多文字层 / Logo / 印刷品 → `high`；产品场景 / 拟真摄影 → `medium`；探索内部稿 → `low`。
+**口诀**：小字号 / 多文字层 / Logo / 印刷品 → `high`；产品场景 / 拟真摄影 → `medium`；探索内部稿 → `low`。
 
 ## 错误处理
 

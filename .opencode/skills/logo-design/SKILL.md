@@ -66,7 +66,7 @@ Color palette: primary [PRIMARY_HEX], accent [ACCENT_HEX], on [BG_HEX] backgroun
 Composition: centered, generous breathing room around the mark, no gradient, no photo, no 3D.
 Output: flat vector-style raster, isolated on plain background, scalable to favicon (32×32) without losing legibility.
 
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than the brand name itself, no realistic illustration, no people faces, no copyrighted symbols, no neon, no glow effects, no 2x2 grid layout, no multiple logos in one image.
+Negative: no realistic illustration, no people faces, no copyrighted symbols, no neon, no glow effects, no 2x2 grid layout, no multiple logos in one image, no watermark, no signature.
 ```
 
 **字段填充规则**：
@@ -114,7 +114,7 @@ Color palette: primary #C73E2E vermillion red for the seal background, the chara
 Composition: centered, generous breathing room around the seal, no gradient, no photo, no 3D.
 Output: flat vector-style raster, isolated on plain background, scalable to favicon (32×32) without losing legibility.
 
-Negative: no garbled characters, no Western letters mistaken for Chinese, no missing strokes, no extra strokes, no text duplicated more than the brand name itself, no realistic illustration, no people faces, no copyrighted symbols, no neon, no glow effects, no 2x2 grid layout, no multiple logos in one image.
+Negative: no realistic illustration, no people faces, no copyrighted symbols, no neon, no glow effects, no 2x2 grid layout, no multiple logos in one image, no watermark, no signature.
 ```
 
 调用：
