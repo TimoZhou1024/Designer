@@ -69,7 +69,8 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
   1. 用 task.variant 决定物件类型
   2. 用 task.embed_text 决定承载文字
   3. 套模板生成 prompt
-  4. text_to_image({ prompt, output_name, artifact_slug, aspect: "4:3" or "16:9", n: 1 })
+  4. text_to_image({ prompt, output_name, artifact_slug, aspect: "4:3" or "16:9", n: 4 })
+       ⚠️ v3.6: n=4 同方向多 seed 探索；外层 designer 循环遍历 task.variant 4 个物件 → 总产 16 张
 ↓
 写 furniture/README.md 含 实际制作工艺建议（材料、尺寸、安装方式）
 ```

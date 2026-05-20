@@ -99,14 +99,27 @@ planner 现在面对两种输入情境：
 | **消费品牌** | Logo / 包装设计 / 品牌广告海报 / 电商主图 / 实体店物料 |
 | **公益组织** | Logo / 议题海报 / 报告封面 / 募款活动物料 / 社交媒体头图 |
 
-**变体策略**（每类生成多张供客户选择）：
-- **Logo（特殊 · Task-Level Fan-Out）**：planner 在 WBS 里只放 **1 个 logo task**，但 `variant` 字段是 candidate directions **数组**（4 项），形如 `["wordmark", "seal", "abstract-mark", "handwritten"]`。designer 看到这个数组会**循环 4 次** `text_to_image` 调用，**每次 n=1 + prompt 锁单方向**。⚠️ 禁止指定 n=4 + 多方向 prompt（API 不会按方向分配，必出垃圾或 2x2 网格）
-- 海报 / 主视觉类：建议 2-3 张，跨构图，planner 拆独立 task
-- 实物 / 周边类：建议 2-3 张，跨产品形态（明信片+雪糕+丝巾），planner 拆独立 task
-- UI 界面类：建议 2 张，跨核心页面（首页+详情页），planner 拆独立 task
-- 印刷品类（宣传册）：建议 2 张，跨封面方案，planner 拆独立 task
+**变体策略**（v3.6 升级 · 全类别统一双层 fan-out · 每类 16 张）：
 
-**风格家族决策**：让 brief §6 的 1-3 个候选方向中选 1 个作为统一基调，所有类别在此基调下生成。变体多样性体现在"构图 / 产品形态 / 页面"维度，而非"风格家族"维度——以保证全套品牌包视觉同源。
+⚠️ **重要变更**：v3.6 起所有 image 类别（包括 logo）走**统一的双层 fan-out 模式**——每类只在 WBS 里放 **1 个 task**，task.variant 是 4 个候选方向的数组，designer 收到后做**双层循环**：外层 4 个 direction × 内层 n=4 个 seed = 每类 16 张图给用户挑选。
+
+每类 task.variant 数组的填法（planner 自主决定 4 个最契合品牌主体类型的 direction）：
+
+| 类别 | variant 数组示例（朱家角古镇） | 4 张 seed 探索什么 |
+|---|---|---|
+| **logo** | `["wordmark", "seal", "abstract-mark", "handwritten"]` | 同方向下笔触 / 字号 / 留白微变 |
+| **poster** | `["dawn-bridge-misty", "moon-night-lantern", "blossom-spring-aerial", "ink-wash-monochrome"]` | 同主题下光线 / 角度 / 构图微变 |
+| **merch（文创）** | `["postcard", "popsicle-package", "silk-scarf", "bookmark"]` | 同产品形态下材质 / 印刷工艺 / 角度微变 |
+| **furniture** | `["wayfinding-totem", "bench", "lamp-post", "info-kiosk"]` | 同物件下场景光 / 安装角度 / 材质微变 |
+| **ui** | `["home-discover", "spot-detail", "route-list", "profile"]` | 同页面下色块布局 / 卡片密度微变 |
+| **brochure** | `["cover-A4", "spread-inner", "tri-fold", "back-cover"]` | 同版式下排版微变 |
+
+**禁止**：
+- ❌ 在 WBS 里把每个 direction 拆成独立 task（如 `logo-wordmark`、`logo-seal` 各一个 task）—— 这是旧 v3.5 模式，已废弃
+- ❌ task.variant 是字符串而非数组 —— 必须 4 项数组
+- ❌ direction 数量少于 3 或多于 4 —— 必须正好 4 个，保证每类总产 16 张
+
+**风格家族决策**：让 brief §6 的 1-3 个候选方向中选 1 个作为统一基调，所有类别在此基调下生成。variant 数组只决定"形态/构图"差异（如 logo 字标 vs 印章 vs 手写），不混不同风格家族。
 
 ### Step 3 ─ 始终保留三项基础任务
 
@@ -120,7 +133,7 @@ planner 现在面对两种输入情境：
 
 ### Step 4 ─ 输出 WBS JSON
 
-WBS 是 JSON 数组，**总项数 6-12** 之间（少于 6 项视为深度不足，超过 12 项 token 爆炸）。每一项含：
+WBS 是 JSON 数组，**总项数 4-9** 之间（v3.6 改：每类只 1 task，不再每个 direction 拆 task。少于 4 项视为深度不足，超过 9 项类别太多）。每一项含：
 
 ```json
 {
@@ -130,7 +143,7 @@ WBS 是 JSON 数组，**总项数 6-12** 之间（少于 6 项视为深度不足
   "deliverable": "产物相对路径",
   "depends_on": ["前置 task-id 数组"],
   "skill": "designer 应加载的 skill 名 或 null",
-  "variant": "string 或 数组（logo 类必须用数组）",
+  "variant": "数组：image 类必须为正好 4 个 direction 字符串（如 ['wordmark','seal','abstract-mark','handwritten']）；非 image 类（brand-spec / copywriting）为 null",
   "embed_text": "图中要渲染的中文主标题（仅图像类任务必填）",
   "micro_copy": {
     "headline": "大标题（≤8 字，最显眼）",
@@ -454,7 +467,7 @@ planner 最终输出**单一 JSON 对象**，含 wbs 和 decision_brief 两个 k
 {
   "wbs": [
     { "id": "brand-spec", "name": "...", "category": "brand-spec", ... },
-    { "id": "logo", "name": "...", "category": "logo", "variant": ["wordmark", ...], ... },
+    { "id": "logo", "name": "...", "category": "logo", "variant": ["wordmark", "seal", "abstract-mark", "handwritten"], ... },
     ...
   ],
   "decision_brief": [
@@ -481,19 +494,15 @@ WBS（节选）：
 [
   { "id": "brand-spec", "name": "DESIGN.md 与 brand-spec.json", "category": "brand-spec", "deliverable": "artifacts/<slug>/DESIGN.md, brand-spec.json", "depends_on": [], "skill": "brand-identity", "variant": null, "embed_text": null, "notes": "方向：东方雅韵；主色墨黑#1A1A1A + 朱砂#C73E2E；字体思源宋体" },
   { "id": "copywriting", "name": "创意文案合集", "category": "copywriting", "deliverable": "artifacts/<slug>/copywriting.md", "depends_on": ["brand-spec"], "skill": "creative-copywriting", "variant": null, "embed_text": null, "notes": "文化符号：江南水乡/桥/河/米食；调性：温润含蓄" },
-  { "id": "logo", "name": "Logo 设计探索 (4 directions × n=1)", "category": "logo", "deliverable": "artifacts/<slug>/logo/logo-{wordmark,seal,abstract-mark,handwritten}.png", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": ["wordmark", "seal", "abstract-mark", "handwritten"], "embed_text": "朱家角", "notes": "designer 必须循环 4 次调用 text_to_image，每次 n=1 + prompt 锁单方向 + quality='high'。⚠️ 严禁 n=4 + 多方向 prompt 的旧策略" },
-  { "id": "merch-postcard", "name": "文创周边-明信片", "category": "merch", "deliverable": "artifacts/<slug>/merch/postcard-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "明信片 - 双桥实景 + 标题「梦回水乡」", "embed_text": "梦回水乡 朱家角", "micro_copy": { "headline": "梦回水乡", "subtitle": "朱家角古镇 · 1700 YEARS", "data_points": ["EST. 公元 264 年", "上海青浦", "GREETINGS FROM"] }, "notes": "横版构图；前景双桥后景民居；明信片背面留邮编与寄出格" },
-  { "id": "merch-icecream", "name": "文创周边-雪糕包装", "category": "merch", "deliverable": "artifacts/<slug>/merch/icecream-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "雪糕外包装 - 顶视图三支并排", "embed_text": "朱家角 江南雪糕", "micro_copy": { "headline": "朱家角", "subtitle": "江南雪糕", "data_points": ["手工·限定", "桂花 · 玫瑰 · 抹茶"], "footnote": "上海·朱家角古镇限定发售" }, "notes": "包装纸朱砂色; 字烫金" },
-  { "id": "merch-silk", "name": "文创周边-丝巾", "category": "merch", "deliverable": "artifacts/<slug>/merch/silk-A.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": "丝巾平铺图 - 水墨桥梁纹样", "embed_text": "朱家角", "micro_copy": { "headline": "朱家角", "subtitle": "ZHU JIA JIAO" }, "notes": "墨色水墨纹样 + 朱砂签印；丝巾本身字少不易喧宾夺主" },
-  { "id": "furniture-signage", "name": "公共家具-导视牌", "category": "furniture", "deliverable": "artifacts/<slug>/furniture/signage-A.png", "depends_on": ["brand-spec"], "skill": "public-furniture", "variant": "景区导视牌站立场景图 - 木质底+金属字", "embed_text": "朱家角古镇 ↑ 北大街", "micro_copy": { "headline": "朱家角古镇", "body_lines": ["↑ 北大街  300 m", "→ 放生桥  120 m", "← 课植园  450 m"], "footnote": "上海青浦区·朱家角风景区" }, "notes": "明代风格木质支撑+黑铁标识；导视必含距离与方向" },
-  { "id": "furniture-bench", "name": "公共家具-座椅", "category": "furniture", "deliverable": "artifacts/<slug>/furniture/bench-A.png", "depends_on": ["brand-spec"], "skill": "public-furniture", "variant": "公共座椅 - 侧视图 + 植入Logo", "embed_text": "朱家角", "micro_copy": { "headline": "朱家角" }, "notes": "深色实木+朱砂Logo小标识；座椅字少留品牌印记即可" },
-  { "id": "ui-home", "name": "旅游 APP-首页", "category": "ui", "deliverable": "artifacts/<slug>/ui/home.png", "depends_on": ["brand-spec"], "skill": "ui-mockup", "variant": "iPhone 15 mockup - 首页发现", "embed_text": "朱家角 探索 路线 美食 我的", "micro_copy": { "headline": "朱家角古镇", "subtitle": "千年江南·一桥一梦", "data_points": ["12 处必打卡景点", "8 条精品路线", "200+ 本地美食"], "navigation": ["探索", "路线", "美食", "我的"], "body_lines": ["热门景点：放生桥 · 课植园 · 北大街", "今日特惠：船游古镇 ¥58 起"] }, "notes": "顶部 hero 区双桥实景；底部 4 tabs；首页要密度感" },
-  { "id": "ui-detail", "name": "旅游 APP-景点详情", "category": "ui", "deliverable": "artifacts/<slug>/ui/detail.png", "depends_on": ["brand-spec"], "skill": "ui-mockup", "variant": "iPhone 15 mockup - 放生桥详情", "embed_text": "放生桥 距您 320 米", "micro_copy": { "headline": "放生桥", "subtitle": "明隆庆五年 · 1571 年建造", "data_points": ["★ 4.8 (3.2 万评价)", "距您 320 m · 步行 4 分钟", "门票 免费"], "body_lines": ["五孔石拱桥 · 沪上现存最长石桥", "推荐时段：清晨 6:00-8:00 雾景"] }, "notes": "地图+实景图+人均评价；信息层级要清晰" },
-  { "id": "brochure-cover", "name": "宣传册-封面", "category": "brochure", "deliverable": "artifacts/<slug>/brochure/cover.png", "depends_on": ["brand-spec"], "skill": "brochure-design", "variant": "封面 - A4 竖版", "embed_text": "朱家角 千年古镇 江南水乡", "micro_copy": { "headline": "朱家角", "subtitle": "千年古镇 · 江南水乡", "body_paragraph": "枕水而居，千年古镇朱家角以九条老街、三十六座古桥、四百余间明清宅院构筑出江南最完整的水乡肌理。漫步北大街，听摇橹声穿过放生桥下，茶香与墨香在课植园交织——这里仍保留着上海最古老的呼吸节奏。", "data_points": ["公元 264 年建镇", "国家 5A 级景区", "上海后花园"], "footnote": "上海青浦区·朱家角古镇文化旅游局 · 2026" }, "notes": "极简留白封面；标题居中烫金；body_paragraph 用于内页或封底背书段" }
+  { "id": "logo", "name": "Logo 探索（4 direction × n=4 = 16 张）", "category": "logo", "deliverable": "artifacts/<slug>/logo/logo-{direction}-{1..4}.png", "depends_on": ["brand-spec"], "skill": "logo-design", "variant": ["wordmark", "seal", "abstract-mark", "handwritten"], "embed_text": "朱家角", "notes": "字标 / 印章 / 抽象图形 / 手写笔意 4 个 direction × n=4 seed 探索 = 16 张" },
+  { "id": "merch", "name": "文创周边（4 direction × n=4 = 16 张）", "category": "merch", "deliverable": "artifacts/<slug>/merch/{direction}-{1..4}.png", "depends_on": ["brand-spec"], "skill": "product-mockup", "variant": ["postcard", "popsicle-package", "silk-scarf", "bookmark"], "embed_text": "朱家角 / 梦回水乡", "micro_copy": { "headline": "梦回水乡", "subtitle": "朱家角古镇 · 1700 YEARS", "data_points": ["EST. 公元 264 年", "上海青浦", "GREETINGS FROM"], "footnote": "上海·朱家角古镇限定" }, "notes": "明信片 / 雪糕包装 / 丝巾 / 书签 4 形态 × n=4 = 16 张" },
+  { "id": "furniture", "name": "公共家具（4 direction × n=4 = 16 张）", "category": "furniture", "deliverable": "artifacts/<slug>/furniture/{direction}-{1..4}.png", "depends_on": ["brand-spec"], "skill": "public-furniture", "variant": ["wayfinding-totem", "bench", "lamp-post", "info-kiosk"], "embed_text": "朱家角古镇 ↑ 北大街", "micro_copy": { "headline": "朱家角古镇", "body_lines": ["↑ 北大街  300 m", "→ 放生桥  120 m", "← 课植园  450 m"], "footnote": "上海青浦区·朱家角风景区" }, "notes": "导视塔 / 座椅 / 路标灯柱 / 信息亭 4 物件 × n=4 = 16 张；明代风格木+黑铁" },
+  { "id": "ui", "name": "旅游 APP UI（4 direction × n=4 = 16 张）", "category": "ui", "deliverable": "artifacts/<slug>/ui/{direction}-{1..4}.png", "depends_on": ["brand-spec"], "skill": "ui-mockup", "variant": ["home-discover", "spot-detail", "route-list", "profile"], "embed_text": "朱家角 探索 路线 美食 我的", "micro_copy": { "headline": "朱家角古镇", "subtitle": "千年江南·一桥一梦", "data_points": ["12 处必打卡景点", "8 条精品路线", "200+ 本地美食"], "navigation": ["探索", "路线", "美食", "我的"], "body_lines": ["热门景点：放生桥 · 课植园 · 北大街", "今日特惠：船游古镇 ¥58 起"] }, "notes": "首页 / 景点详情 / 路线列表 / 我的 4 页 × n=4 = 16 张；iPhone 15 mockup" },
+  { "id": "brochure", "name": "宣传册（4 direction × n=4 = 16 张）", "category": "brochure", "deliverable": "artifacts/<slug>/brochure/{direction}-{1..4}.png", "depends_on": ["brand-spec"], "skill": "brochure-design", "variant": ["cover-A4", "spread-inner", "tri-fold", "back-cover"], "embed_text": "朱家角 千年古镇 江南水乡", "micro_copy": { "headline": "朱家角", "subtitle": "千年古镇 · 江南水乡", "body_paragraph": "枕水而居，千年古镇朱家角以九条老街、三十六座古桥、四百余间明清宅院构筑出江南最完整的水乡肌理。漫步北大街，听摇橹声穿过放生桥下，茶香与墨香在课植园交织——这里仍保留着上海最古老的呼吸节奏。", "data_points": ["公元 264 年建镇", "国家 5A 级景区", "上海后花园"], "footnote": "上海青浦区·朱家角古镇文化旅游局 · 2026" }, "notes": "封面 / 内页跨页 / 三折页 / 封底 4 版式 × n=4 = 16 张" }
 ]
 ```
 
-共 11 项，6 类（Logo 单 task 但 n=4 出 4 版，因此实际产出仍是 13 张图）。这是文旅古镇的典型 WBS 形态，**不是模板**——其他品牌类型的 WBS 应当截然不同。
+共 7 项 task，5 类（brand-spec + copywriting 各 1，logo / merch / furniture / ui / brochure 各 1，每类拆 4 direction × n=4 = 16 张）。**实际产出：80 张图 + 文档**。这是文旅古镇的典型 v3.6 WBS 形态——其他品牌类型的 WBS 应当截然不同。
 
 **对应的 decision_brief 实例**（朱家角）：
 
@@ -548,8 +557,8 @@ WBS（节选）：
 - ❌ **跨越权限做设计决策**：不要在 WBS 里写 prompt 内容、写具体颜色 HEX。这些是 designer 基于 brand-spec.json 的事
 - ❌ **缺少 embed_text 字段**：所有图像类任务必须填 embed_text（即使是空字符串"图中无文字"也要明确）—— 因为图含字是新策略的核心
 - ❌ **变体只在风格上区隔**：变体应在"构图 / 产品形态 / 页面 / 视角"维度变化，风格家族保持统一
-- ❌ **超过 12 项**：会爆 token + API 成本失控；超过则合并相似项
-- ❌ **少于 6 项**：不能体现"完整品牌包"
+- ❌ **超过 9 项**：v3.6 起每类只 1 task，超过 9 项意味着类别冗余
+- ❌ **少于 4 项**：不能体现"完整品牌包"（至少 brand-spec + copywriting + 2 个 image 类别）
 
 ## 输出
 

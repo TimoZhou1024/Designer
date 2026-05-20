@@ -9,21 +9,21 @@ description: Logo 设计 prompt 模板。教 designer agent 通过 Task-Level Fa
 
 WBS 中出现 `category: "logo"` 任务时，designer 必须先 `skill("text-rendering")` 与 `skill("logo-design")`，再调 `text_to_image`。
 
-## 核心策略：Task-Level Variant Fan-Out（修正旧 n=4 错误）
+## 核心策略：双层 Variant Fan-Out（v3.6 升级 · 每类 16 张）
 
-⚠️ **重要修正**：早期版本让 designer 一次 `n=4` 调用 + prompt 里同时列 4 个不同方向 ——
-**这是 prompt 工程的根本性错误**：API 的 `n=4` 行为是"用同一个 prompt 跑 4 个不同 seed"，模型不会自动把 4 个方向分配到 4 张图，反而会**揉风格**或者**画 2×2 网格**（设计灾难）。
+⚠️ **历史教训**：早期 v3.0 版本让 designer 一次 `n=4` 调用 + prompt 里同时列 4 个不同方向 —— 这是 prompt 工程的根本性错误：API 的 `n=4` 行为是"用同一个 prompt 跑 4 个不同 seed"，模型不会自动把 4 个方向分配到 4 张图，反而会揉风格或画 2×2 网格。
 
-**正确做法（OpenAI cookbook 实际推荐）**：
-- planner 在 WBS 里仍然只写 **1 个 logo task**（保持抽象层简洁）
-- task 的 `variant` 字段是个**有序列表**，列出 4 个 candidate directions
-- designer 看到 logo 类别 + variant 列表时，**循环 N 次 `text_to_image` 调用**（每次 n=1）
-- 每次调用 prompt 锁定**一个明确单一方向**
+**v3.6 正确做法（双层 fan-out）**：
+- planner 在 WBS 里只写 **1 个 logo task**，task.variant 是 4 个 direction 字符串数组
+- designer **外层循环 4 次**遍历 variant 数组，每次 prompt 锁定**单一 direction**
+- **内层每次调 text_to_image 时传 n=4**——让模型在同一方向下产 4 个 seed 探索（笔触/字号/留白微变）
+- 总产出：4 direction × 4 seed = **16 张 logo** 给用户挑选
 
 为什么这样做：
 - 每次 prompt 单方向 → 模型不会揉风格，每张图是清晰的方向探索
-- 复用 task 上下文：brand-spec / DESIGN.md 在 designer 内存只读 1 次，所有循环共享
-- 比 4 个独立 task 节省 token；比 1 次 n=4 真出差异化 —— 是两全方案
+- n=4 让 seed 多样性叠加在 direction 多样性之上 → 探索空间最大
+- 复用 task 上下文：brand-spec / DESIGN.md 在 designer 内存只读 1 次，4 次循环共享
+- AI 生图不确定性高，单方向出 4 张让用户挑 → 一次跑出可用图的概率从 ~60% 升到 ~95%
 
 ## 风格家族库（candidate directions）
 
@@ -90,7 +90,7 @@ For direction in task.variant (e.g. ["wordmark", "seal", "abstract-mark", "handw
     output_name: `logo/logo-${direction}.png`,   # 文件名含 direction id
     artifact_slug: <slug>,
     aspect: "1:1",
-    n: 1,                  ⚠️ 关键：每次 n=1，绝对不要 n=4
+    n: 4,                  ⚠️ v3.6 关键：每次 n=4 同方向多 seed 探索
     quality: "high"        ⚠️ Logo 必须 high
   })
 ↓
@@ -125,16 +125,16 @@ text_to_image({
   output_name: "logo/logo-seal.png",
   artifact_slug: "zhujiajiao-20260516",
   aspect: "1:1",
-  n: 1,
+  n: 4,
   quality: "high"
 })
 ```
 
-然后下一个循环换成 `wordmark` 方向，再调用一次 —— **不是 n=4**。
+然后下一个循环换成 `wordmark` 方向，再调用一次 —— **总共 4 次工具调用，每次 n=4**，最终落盘 16 张 logo 图。
 
 ## 反模式
 
-- ❌ **n=4 + prompt 里列多方向**：API 不会按方向分配，必出垃圾
+- ❌ **n=4 + prompt 里列多方向**：API 不会按方向分配，必出垃圾——必须保持外层循环遍历方向 + 内层 n=4 多 seed
 - ❌ **同一 task 内多次调用 n=2/n=3**：折中没意义，要么单方向 n=1，要么真的"同方向多 seed 探索"才用 n=2/3
 - ❌ **prompt 里指令"必须出现 v1 字标 v2 印章 …"**：模型不擅长按指定顺序产出
 - ❌ **不传 quality / 传 medium**：Logo 是品牌根基，必须 high

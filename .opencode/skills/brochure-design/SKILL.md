@@ -88,7 +88,8 @@ Negative: no garbled characters in any text element, no missing strokes, no West
   1. 用 task.variant 决定印刷物类型
   2. 从 copywriting.md 取标题文字
   3. 套模板填充
-  4. text_to_image({ prompt, output_name, artifact_slug, aspect: <按尺寸>, n: 1 })
+  4. text_to_image({ prompt, output_name, artifact_slug, aspect: <按尺寸>, n: 4 })
+       ⚠️ v3.6: n=4 同方向多 seed 探索；外层 designer 循环遍历 task.variant 4 个版式 → 总产 16 张
 ↓
 写 brochure/README.md 含 印刷工艺建议（纸张克重、装订、烫金/UV）+ 后期 InDesign 填字模板
 ```

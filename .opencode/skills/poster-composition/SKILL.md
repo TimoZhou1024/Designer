@@ -80,7 +80,8 @@ Negative: no garbled characters, no Western letters mistaken for Chinese, no mis
 对每个海报变体任务：
   1. 从 task.embed_text 取标题文字
   2. 用上方模板填充 prompt
-  3. text_to_image({ prompt, output_name, artifact_slug, aspect: "9:16", n: 1 })
+  3. text_to_image({ prompt, output_name, artifact_slug, aspect: "9:16", n: 4 })
+       ⚠️ v3.6: n=4 同方向多 seed 探索；外层 designer 循环遍历 task.variant 4 个 direction → 总产 16 张
 ↓
 保存 poster/README.md 记录每张 prompt + 真实 model/endpoint + 备注
 ```

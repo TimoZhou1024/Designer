@@ -332,11 +332,13 @@ export default tool({
       .number()
       .int()
       .min(1)
-      .max(4)
+      .max(8)
       .optional()
       .describe(
-        "生成张数，默认 1。Logo 推荐传 n=4 让模型在同一上下文中产出 4 个差异化方向（更省 token、变体更多样）。" +
-          "其他类别（poster/UI/文创等）保持 n=1，因为变体方向跨度大，需 planner 在 WBS 里拆独立 task。",
+        "生成张数（同 prompt 多 seed 探索），默认 1，最大 8。" +
+          "v3.6 推荐：所有图像类别走双层循环——designer 外层遍历 task.variant 数组按 direction 多次调用工具，" +
+          "每次内层传 n=4 让模型在同一方向下产 4 个 seed 变体。最终每类 4 direction × 4 seed = 16 张供选。" +
+          "落盘文件名自动加 -1 / -2 / -3 / -4 后缀。",
       ),
     quality: tool.schema
       .enum(["low", "medium", "high"])

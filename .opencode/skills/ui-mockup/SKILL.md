@@ -96,7 +96,8 @@ Negative: no garbled characters, no missing strokes, no Western letters mistaken
   1. 决定页面类型（task.variant）
   2. 列出该页面需要的所有中文短文字（按 layout 分块）
   3. 套模板填充
-  4. text_to_image({ prompt, output_name, artifact_slug, aspect: <设备比例>, n: 1 })
+  4. text_to_image({ prompt, output_name, artifact_slug, aspect: <设备比例>, n: 4 })
+       ⚠️ v3.6: n=4 同方向多 seed 探索；外层 designer 循环遍历 task.variant 4 个页面 → 总产 16 张
 ↓
 写 ui/README.md 含 真实开发栈建议（React Native / Flutter / SwiftUI），交付给前端的 design tokens
 ```

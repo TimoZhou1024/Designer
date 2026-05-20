@@ -120,7 +120,19 @@ orchestrator 会传给你：
 4. **明确的 Negative Prompt**：每个 image prompt 都必须含 negative 部分（含 text-rendering 指定的中文渲染 negatives）
 5. **变体显著差异**：同类别不同变体必须**视觉显著差异**——从 task.variant 字段决定差异维度
 6. **embed_text 必须严格逐字注入**：从 task.embed_text 取的中文文字必须**原封不动**用直角引号 `「」` 或英文双引号 `"…"` 包起来出现在 prompt"Render the Chinese text" 位置——这是 text-rendering skill 的核心规则
-7. **Logo 必须循环执行（Task-Level Fan-Out）**：当 task.category === "logo" 且 task.variant 是数组时，**对数组每一项循环调用 1 次** text_to_image（每次 n=1 + quality="high" + prompt 锁定该 direction）。**严禁** `n=4 + prompt 内列多方向` —— 这会让模型揉风格或画 2x2 网格
+7. **🔁 所有 image 类别走双层 fan-out（v3.6 关键升级）**：当 task.variant 是数组时，对**每一项 direction** 循环调用 1 次 `text_to_image`，**每次 n=4 + quality="high" + prompt 锁定该 direction**。最终每类产 4 direction × 4 seed = **16 张图给用户挑选**。
+   - **外层循环**（4 次）：遍历 `task.variant` 数组的每个 direction
+   - **内层 n=4**：单次工具调用让模型产 4 个同方向 seed 探索（笔触/角度/光线微变）
+   - **落盘命名**：output_name 用 `<category>/<direction>.png`，工具会自动加 `-1`/`-2`/`-3`/`-4` 后缀
+   - 例：logo 类 task.variant = `["wordmark","seal","abstract-mark","handwritten"]` 时
+     ```
+     循环 1: text_to_image({prompt: <wordmark prompt>, output_name: "logo/wordmark.png", n: 4, quality: "high"})
+             → 落盘 logo/wordmark-1.png ... wordmark-4.png
+     循环 2: text_to_image({prompt: <seal prompt>, output_name: "logo/seal.png", n: 4, quality: "high"})
+             → 落盘 logo/seal-1.png ... seal-4.png
+     循环 3-4: 同上模式 abstract-mark / handwritten
+     ```
+   - **禁止**：单次 prompt 里塞多 direction（API 不会按方向分配 seed）；禁止 n < 4（变体数量不足）；禁止跳过任何 direction
 8. **micro_copy 必须完整注入**（v3.1 关键）：每个 image task 的 prompt 都要把 task.micro_copy 字段里的完整信息层级——headline / subtitle / body_lines / data_points / footnote / navigation——逐项展开到 prompt 中（具体格式按 skill 模板）。**这是"AI 通稿感" vs "真实交付物" 的分水岭**：OpenAI cookbook 的 market slide 之所以专业，正是因为它给了 `TAM $42B / SAM $8.7B / 2021-2026 / "AGI Research, 2024"` 这种**具体数字 + 来源 + 时间**的微文案。如果某个字段为空（如 footnote），跳过即可，不要捏造。
 
 ## 🎯 Quality 决策矩阵（必须严格遵守）
